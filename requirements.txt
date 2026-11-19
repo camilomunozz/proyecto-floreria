@@ -19,3 +19,4 @@ sqlparse==0.6.0
 transbank-sdk==6.1.0
 tzdata==2026.3
 urllib3==2.8.0
+whitenoise==6.12.0
