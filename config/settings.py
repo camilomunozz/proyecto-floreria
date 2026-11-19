@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 import os
 from pathlib import Path
+import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -40,7 +41,9 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    "cloudinary_storage",
     'django.contrib.staticfiles',
+    "cloudinary",
     'tienda',
     'carrito',
     'pedidos',
@@ -88,12 +91,10 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+    "default": dj_database_url.config(
+        default="postgresql://tienda_user:viewflower@localhost:5432/tienda",
+    )
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -165,6 +166,13 @@ TRANSBANK_AMBIENTE = 'TEST'  # Cambiar a 'LIVE' en producción
 TRANSBANK_COMMERCE_CODE = "597055555532"
 TRANSBANK_API_KEY = "579B532A7440BB0C9072DED5305E76fc2F62D8082F70757e490d181a1b8d810d"
 
-#chatbot
-SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
-GEMINI_API_KEY = "AQ.Ab8RN6KS3PVSO7vkwdhgRZHtK91zPBtV3hg6pGV9X1VnQrNmRQ"
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": os.environ["CLOUDINARY_CLOUD_NAME"],
+    "API_KEY": os.environ["CLOUDINARY_API_KEY"],
+    "API_SECRET": os.environ["CLOUDINARY_API_SECRET"],
+}
+
+STORAGES = {
+    "default": {"BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+}
