@@ -20,6 +20,7 @@ urlpatterns = [
     path('gestion/crear/', views.crear_producto, name='crear_producto'),
     path('gestion/editar/<int:id>/', views.editar_producto, name='editar_producto'),
     path('gestion/eliminar/<int:id>/', views.eliminar_producto, name='eliminar_producto'),
+    path('gestion/crear_tipo/', views.crear_tipo, name='crear_tipo'),
     path('gestion/crear_categoria/', views.crear_categoria, name='crear_categoria'),
     path('gestion/crear_ocasion/', views.crear_ocasion, name='crear_ocasion'),
     path('gestion/dashboard/', views.admin_dashboard, name='admin_dashboard'),

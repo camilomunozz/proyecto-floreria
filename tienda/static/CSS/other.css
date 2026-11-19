@@ -6,13 +6,19 @@
     --text-lightgray: #898b8d;
     --dark-leaf: #2f8344;
     --text-light: #eef1f5;       
-    --light-leaf: #7dc262;  
+    --light-leaf: #7dc262; 
+    --unactive-leaf: #9ab98e;   
     --filter-bg: #e6e6e6;
     --font-heading: 'Georgia', serif;
     --font-body: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
 
+    
+
 /*== ELEMENTOS ==*/
+    .catalogo-box{
+        height:auto;
+    }
     .flower-catalogo * {
         font-family: 'Poppins', sans-serif;
         color: var(--text-dark);
@@ -70,6 +76,7 @@
 
     .flower-cartbtn * {
         color: var(--text-light);
+        background-color: var(--light-leaf);
     }
 
     .flower-productname{
@@ -139,6 +146,33 @@
         text-overflow: ellipsis;
         white-space: nowrap;
     }
+    /* cartbtn */
+        .flower-cartbtn,
+        .box-cartbtn,
+        .cartbtn i,
+        .text-cartbtn {
+            background: transparent;
+        }
+
+        .flower-cartbtn .btn {
+            --bs-btn-bg: var(--unactive-leaf);
+            --bs-btn-border-color: var(--unactive-leaf);
+            --bs-btn-color: var(--unactive-leaf);
+
+            --bs-btn-hover-bg: var(--light-leaf);
+            --bs-btn-hover-border-color: var(--light-leaf);
+            --bs-btn-hover-color: var(--light-leaf);
+
+            --bs-btn-active-bg: var(--dark-leaf);
+            --bs-btn-active-border-color: var(--dark-leaf);
+            --bs-btn-active-color: var(--text-light);
+
+            box-sizing: border-box;
+            text-align: center !important;
+
+            border-radius: 30px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
+        }
 
     /* search error */
 
@@ -197,11 +231,20 @@
         }
     
     /* paginación */
+        .pag-box{
+            height: max-content;
+            align-items:end;
+        }
+
         .pagination{
             gap: 0.8rem;
         }
 
-        ul.pagination .page-item .page-link{
+        ul.pagination{
+            --bs-pagination-focus-box-shadow: none;
+        }
+
+        ul.pagination .flower-pageitem .page-link{
             width: 2.5rem;
             height: 2.5rem;
             padding: 0;
@@ -213,10 +256,15 @@
             justify-content: center;
         }
 
+        ul.pagination .page-arrow{
+            font-size: 1.5rem;
+            line-height: 1;
+        }
+
         .flower-pagebox{
-            /*background-color: white;
+            background-color: white;
             box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
-            padding: 10px 15px;*/
+            padding: 10px 15px;
             width: fit-content;
             margin: auto;
             border-radius: 30px;
@@ -230,7 +278,34 @@
             text-align: center;
             font-size: clamp(0.6rem, 0.8rem + 0.5vw, 1rem); 
             border-radius: 50% !important;
+            border: none;
+            transition-delay: 0.6ms;
         }
+
+        .flower-pageitem a:hover{
+            background-color: var(--filter-bg) !important;
+            color: #000000 !important;
+        }
+
+        .flower-pageitem span{
+            text-align: center;
+            font-size: clamp(0.6rem, 0.8rem + 0.5vw, 1rem); 
+            border-radius: 50% !important;
+            background-color: var(--light-leaf);
+            color: #ffffff;
+        }
+
+        .flower-pageitem span:hover{
+            background-color: var(--dark-leaf);
+             color: #ffffff;
+        }
+
+        .flower-pageitem a:focus{
+            background-color: var(--text-gray) !important;
+            color: #ffffff !important;
+        }
+
+
 
 /*== ANIMACIONES ==*/
 
@@ -238,7 +313,7 @@
         .flower-cartbtn{
             opacity: 0;
             transform: translateY(100%);
-            transition: opacity 0.3s ease, transform 0.3s ease;
+            transition: opacity 1s ease, transform 0.3s ease;
         }
 
         .flower-productbox:hover .flower-cartbtn,
@@ -265,7 +340,7 @@
                 width: 3rem;
                 height: 3rem;
                 padding: 0;
-                border-radius: 25%;
+                border-radius: 30px;
             }
 
             .text-cartbtn{

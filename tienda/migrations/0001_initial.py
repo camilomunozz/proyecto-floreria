@@ -17,6 +17,19 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
+            name='Tipo',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('nombre', models.CharField(max_length=100, unique=True)),
+                ('descripcion', models.TextField(blank=True, null=True))
+            ],
+            options={
+                'verbose_name': 'Tipo',
+                'verbose_name_plural': 'Tipos',
+                'ordering': ['nombre']
+            },
+        ),
+        migrations.CreateModel(
             name='Categoria',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
@@ -85,6 +98,7 @@ class Migration(migrations.Migration):
                 ('actualizado_el', models.DateTimeField(auto_now=True)),
                 ('categoria', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='productos', to='tienda.categoria')),
                 ('ocasion', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='productos', to='tienda.ocasion')),
+                ('tipo', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='productos', to='tienda.tipo')),
             ],
             options={
                 'verbose_name': 'Producto',

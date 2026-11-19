@@ -7,7 +7,7 @@ from django.contrib.auth.decorators import login_required
 
 from .models import Categoria, Ocasion, Producto
 
-from .forms import CategoriaForm, OcasionForm, ProductoForm, RegistroForm, EditarPerfilForm
+from .forms import TipoForm, CategoriaForm, OcasionForm, ProductoForm, RegistroForm, EditarPerfilForm
 
 from django.db.models import Q
 
@@ -88,7 +88,7 @@ def catalogo_productos(request):
         productos = productos.filter(ocasion_id__in=list_ocasiones)
 
     #Fija la cantidad de productos por pagina.
-    paginacion = Paginator(productos, 6)
+    paginacion = Paginator(productos, 12)
     pagina_num = paginacion.get_page(request.GET.get('page'))
 
     #Querystring que conserva los filtros
@@ -258,6 +258,17 @@ def eliminar_producto(request, id):
     return render(request, 'admin/eliminar.html', {'producto': producto})
 
 @role_required('admin')
+def crear_tipo(request):
+    if request.method == 'POST':
+        form = TipoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('admin_lista_producto')
+    else:
+        form = TipoForm(request.POST)
+    return render(request, 'admin/crear_tipo.html', {'form' : form})
+
+@role_required('admin')
 def crear_categoria(request):
     if request.method == 'POST':
         form = CategoriaForm(request.POST)
@@ -267,6 +278,7 @@ def crear_categoria(request):
     else:
         form = CategoriaForm()
     return render(request, 'admin/crear_categoria.html', {'form': form})
+
 @role_required('admin')
 def crear_ocasion(request):
     if request.method == 'POST':

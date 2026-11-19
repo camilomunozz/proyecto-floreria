@@ -69,7 +69,7 @@ class ProductoForm(forms.ModelForm):
         model = Producto
         fields = [
             'nombre', 'precio', 'descripcion', 'stock', 
-            'categoria', 'ocasion', 
+            'tipo','categoria', 'ocasion',
             'imagen', 'disponible'
         ]
         widgets = {
@@ -77,6 +77,7 @@ class ProductoForm(forms.ModelForm):
             'precio': forms.NumberInput(attrs={'class': 'form-control', 'step': '1'}),
             'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
             'stock': forms.NumberInput(attrs={'class': 'form-control'}),
+            'tipo': forms.Select(attrs={'class': 'form-select'}),
             'categoria': forms.Select(attrs={'class': 'form-select'}),
             'ocasion': forms.Select(attrs={'class': 'form-select'}),
             'disponible': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
@@ -87,6 +88,7 @@ class ProductoForm(forms.ModelForm):
             'precio': 'Precio',
             'descripcion': 'Descripción', 
             'stock': 'Stock',
+            'tipo': 'Tipo',
             'categoria': 'Categoría',
             'ocasion': 'Ocasión',
             'disponible': 'Disponible',
@@ -97,6 +99,15 @@ class ProductoForm(forms.ModelForm):
         if precio is not None and precio <= 0:
             raise ValidationError("El precio debe ser un número positivo mayor que cero.")
         return precio
+
+class TipoForm(forms.ModelForm):
+    class Meta:
+        model = Tipo
+        fields = ['nombre', 'descripcion']
+        widgets = {
+            'nombre': forms.TextInput(attrs={'class': 'form-control'}),
+            'descripcion': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+        }
 
 class CategoriaForm(forms.ModelForm):
     class Meta:

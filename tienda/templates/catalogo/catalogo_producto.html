@@ -76,7 +76,7 @@
 
         <!--Catalogo de productos-->
         {% if productos %}
-            <div class="col-12 mt-5 mt-xl-0 col-xxl-9 col-xl-9" >
+            <div class="col-12 mt-5 mt-xl-0 col-xxl-9 col-xl-9 catalogo-box" >
                 <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-3 row-cols-xxl-4 g-2 g-md-3">
                 {% for prod in productos %}
                     <div class="col">          
@@ -105,8 +105,8 @@
                                 <!--Boton agragar al carrito-->
                                 <div class="flower-cartbtn position-absolute bottom-0 p-2 p-md-3">
                                     <div class="d-flex justify-content-center box-cartbtn">
-                                        <button value="{{ prod.id }}" class="btn btn-primary btn-md d-flex align-items-center justify-content-center gap-2 agregar-carrito">
-                                            <i class="bi bi-cart-plus-fill fs-4 lh-1"></i>
+                                        <button value="{{ prod.id }}" class="btn btn-primary btn-md d-flex align-items-center justify-content-center gap-2 cartbtn agregar-carrito">
+                                            <i class="bi bi-cart-plus-fill fs-5 lh-1"></i>
                                             <span class="text-cartbtn">Agregar al carrito</span>
                                         </button>
                                     </div>
@@ -127,19 +127,19 @@
 
                 <!--Paginación-->
                 {% if pag_num.has_other_pages %}
-                    <nav aria-label="Catalogo-paginación d-flex justify-content-center" class="mt-5">
+                    <nav aria-label="Catalogo-paginación" class="mt-5 pag-box">
                         <ul class="pagination justify-content-center flex-wrap flower-pagebox">
 
                             {% if pag_num.has_previous %}
                                 {% if pag_num.previous_page_number != 1 %}
                                     <!--Primera pagina-->
                                     <li class="page-item flower-pageitem" >
-                                        <a class="page-link" title="Primera página" href="?{% if querystring  %}{{ querystring }}&{% endif %}page=1">&laquo;</a>
+                                        <a class="page-link page-arrow" title="Primera página" href="?{% if querystring  %}{{ querystring }}&{% endif %}page=1">&laquo;</a>
                                     </li>
                                 {% endif %}
                                 <!--Pagina previa-->
                                 <li class="page-item flower-pageitem">
-                                    <a class="page-link" title="Página anterior" href="?{% if querystring  %}{{ querystring }}&{% endif %}page={{ pag_num.previous_page_number }}"> &lsaquo; </a>
+                                    <a class="page-link page-arrow" title="Página anterior" href="?{% if querystring  %}{{ querystring }}&{% endif %}page={{ pag_num.previous_page_number }}">&lsaquo;</a>
                                 </li>   
                             {% endif %} 
 
@@ -147,7 +147,7 @@
                             {% for n in pag_num.paginator.page_range %}
                                 <!--pagina actual-->
                                 {% if n == pag_num.number %}
-                                    <li class="page-item active flower-pageitem">
+                                    <li class="flower-pageitem">
                                         <span class="page-link" title="Página actual">{{ n }}</span>
                                     </li>
                                 <!--Rango de paginas siempre visible-->
@@ -167,12 +167,12 @@
                             {% if pag_num.has_next %}
                                 <!--Pagina siguiente-->
                                 <li class="page-item flower-pageitem">
-                                    <a class="page-link" title="Página siguiente" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ pag_num.next_page_number }}"> &rsaquo; </a>
+                                    <a class="page-link page-arrow" title="Página siguiente" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ pag_num.next_page_number }}">&rsaquo;</a>
                                 </li>
                                 {% if pag_num.next_page_number != pag_num.paginator.num_pages %}
                                     <!--Ultima pagina-->
                                     <li class="page-item flower-pageitem">
-                                        <a class="page-link" title="Última página" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ pag_num.paginator.num_pages }}">&raquo;</a>
+                                        <a class="page-link page-arrow" title="Última página" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ pag_num.paginator.num_pages }}">&raquo;</a>
                                     </li>
                                 {% endif %}
                             {% endif %}
@@ -223,6 +223,12 @@
             filtro.addEventListener('hidden.bs.collapse', () => sessionStorage.setItem(filter_id, 'cerrado'));
         });
     })();
+
+    document.querySelectorAll('.pagination .page-item:not(.active) .page-link').forEach(link => {
+    link.addEventListener('click', () => {
+        link.closest('.flower-pageitem a').classList.add('active');
+    });
+    });
 
     // Usamos la clase .agregar-carrito en lugar del ID
     $(document).on('click', '.agregar-carrito', function (e) {

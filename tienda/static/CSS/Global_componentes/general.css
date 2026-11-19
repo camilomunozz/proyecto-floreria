@@ -3,6 +3,8 @@
     --primary-dark: #4c5115;        /* Color oscuro para hovers */
     --accent-color: #f2f3eb;        /* Rosa pastel / suave */
     --bg-light: #f3efe8;            /* Fondo */
+    --bg-contrast:#f1ddb9; 
+    --bg-contrast2:#cfc6b1; 
     --text-dark: #2d3748;           /* Texto principal */
     --font-heading: 'Georgia', serif;
     --font-body: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -15,6 +17,14 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    /*Diseño del fondo*/
+    background-image: url("/static/SVG/final2.svg");
+    /*background-repeat: none;
+    background-position: center;
+    background-size: cover;
+    background-attachment: fixed;*/ 
+    background-repeat: repeat;
+    background-size: auto 650px;
 }
 
 h1, h2, h3, h4, h5, h6 {

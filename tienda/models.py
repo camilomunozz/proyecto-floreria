@@ -30,6 +30,18 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return self.email
+
+class Tipo(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+    descripcion = models.TextField(blank=True, null=True)
+
+    class Meta:
+        verbose_name ='Tipo'
+        verbose_name_plural = 'Tipos'
+        ordering = ['nombre']
+
+    def __str__(self):
+        return self.nombre
     
 class Categoria(models.Model):
     nombre = models.CharField(max_length=100, unique=True)
@@ -60,6 +72,7 @@ class Producto(models.Model):
     descripcion = models.TextField(blank=True, null=True)
     stock = models.PositiveIntegerField(default=0)
 
+    tipo = models.ForeignKey(Tipo, on_delete=models.SET_NULL, null=True, blank=True, related_name='productos')
     categoria = models.ForeignKey(Categoria, on_delete=models.SET_NULL, null=True, blank=True, related_name='productos')
     ocasion = models.ForeignKey(Ocasion, on_delete=models.SET_NULL, null=True, blank=True, related_name='productos')
 
