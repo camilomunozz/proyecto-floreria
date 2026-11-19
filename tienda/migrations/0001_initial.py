@@ -99,6 +99,7 @@ class Migration(migrations.Migration):
                 ('categoria', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='productos', to='tienda.categoria')),
                 ('ocasion', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='productos', to='tienda.ocasion')),
                 ('tipo', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='productos', to='tienda.tipo')),
+
             ],
             options={
                 'verbose_name': 'Producto',
