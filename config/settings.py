@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     'pedidos',
     'chatbot',
     'django_browser_reload',
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [
