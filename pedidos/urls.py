@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from pedidos.views import panel
 
 urlpatterns = [
     path('checkout/', views.iniciar_checkout, name='checkout'),
@@ -10,4 +11,6 @@ urlpatterns = [
     path('webpay/retorno/', views.webpay_retorno, name='webpay_retorno'),   
 
     path('mis-pedidos/', views.mis_pedidos, name='mis_pedidos'),
+
+    path("panel/", panel, name="panel"),
 ]
