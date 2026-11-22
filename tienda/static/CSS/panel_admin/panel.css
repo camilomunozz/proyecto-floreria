@@ -1,26 +1,38 @@
 /* ==========================================================================
    Panel de ventas · Florería
-   Ubicación: tienda/static/CSS/panel_ventas.css
-   Todo está acotado a .panel-ventas para no afectar el resto del admin.
+   Ubicación: tienda/static/CSS/panel_admin/panel.css
+
+   Tipografía: Poppins (se carga desde Google Fonts en panel.html).
+   Interfaz sobria: textos negros y superficies neutras. Los colores de los
+   gráficos viven en el script de panel.html (uno distinto por gráfico).
    ========================================================================== */
 
 .panel-ventas {
-    --verde: #707444;
-    --oscuro: #4c5115;
-    --crema: #f1ddb9;
-    --arena: #cfc6b1;
-    --suave: #f3efe8;
-    --linea: #ddd6c6;
-    --texto: #2d3748;
-    --apagado: #5b6270;
-    --subida: #2f855a;
-    --bajada: #c53030;
-    --serif: Georgia, "Times New Roman", serif;
+    /* Tipografía */
+    --fuente-titulo: "Poppins", "Segoe UI", Tahoma, sans-serif;
+    --fuente-cuerpo: "Poppins", "Segoe UI", Tahoma, sans-serif;
+
+    /* Interfaz sobria: texto negro y superficies neutras */
+    --principal: #2563eb;
+    --principal-suave: rgba(37, 99, 235, 0.15);
+    --oscuro: #111111;
+    --acento: #f59e0b;
+    --suave: #f6f7f9;
+    --linea: #e5e7eb;
+    --borde: #d1d5db;
+    --aviso-fondo: #fffbeb;
+    --aviso-borde: #fde68a;
+
+    /* Texto y semáforo */
+    --texto: #1f2937;
+    --apagado: #4b5563;
+    --subida: #15803d;
+    --bajada: #b91c1c;
 
     max-width: 1400px;
     margin-inline: auto;
     color: var(--texto);
-    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+    font-family: var(--fuente-cuerpo);
 }
 
 /* ---------- Encabezado y filtros ---------- */
@@ -36,8 +48,8 @@
 
 .panel-ventas h1 {
     margin: 0;
-    font-family: var(--serif);
-    font-size: 1.75rem;
+    font-family: var(--fuente-titulo);
+    font-size: 1.6rem;
     font-weight: 600;
     line-height: 1.2;
     color: var(--oscuro);
@@ -49,13 +61,14 @@
     max-width: 100%;
     overflow-x: auto;
     background: #fff;
-    border: 1px solid var(--arena);
+    border: 1px solid var(--borde);
     border-radius: 8px;
 }
 
 .panel-ventas .chip {
     padding: 0.45rem 0.95rem;
     color: var(--oscuro);
+    font-family: var(--fuente-cuerpo);
     font-size: 0.88rem;
     white-space: nowrap;
     text-decoration: none;
@@ -86,7 +99,7 @@
     gap: 0.5rem;
     margin-bottom: 1rem;
     font-size: 0.9rem;
-    color: var(--apagado);
+    color: var(--texto);
 }
 
 .panel-ventas input[type="date"],
@@ -95,7 +108,7 @@
     font: inherit;
     color: var(--texto);
     background: #fff;
-    border: 1px solid var(--arena);
+    border: 1px solid var(--borde);
     border-radius: 6px;
 }
 
@@ -110,7 +123,7 @@
 }
 
 .panel-ventas form.rango button:hover {
-    background: #3a3e10;
+    background: color-mix(in srgb, var(--oscuro) 85%, #000);
 }
 
 .panel-ventas .fecha-info {
@@ -129,10 +142,10 @@
 .panel-ventas .vacio {
     margin-bottom: 1rem;
     padding: 0.7rem 1rem;
-    color: #5a4a1a;
-    background: #fbf3e0;
-    border: 1px solid var(--crema);
-    border-left: 4px solid #d9a441;
+    color: var(--oscuro);
+    background: var(--aviso-fondo);
+    border: 1px solid var(--aviso-borde);
+    border-left: 4px solid var(--acento);
     border-radius: 6px;
 }
 
@@ -150,7 +163,7 @@
 
 .panel-ventas h3 {
     margin: 0 0 0.75rem;
-    font-family: var(--serif);
+    font-family: var(--fuente-titulo);
     font-size: 1rem;
     font-weight: 600;
     color: var(--oscuro);
@@ -177,17 +190,18 @@
 
 .panel-ventas .kpi span {
     display: block;
-    font-size: 0.82rem;
-    color: var(--apagado);
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--oscuro);
 }
 
 .panel-ventas .kpi b {
     display: block;
     margin: 0.15rem 0;
-    font-family: var(--serif);
-    font-size: 1.7rem;
+    font-family: var(--fuente-titulo);
+    font-size: 1.6rem;
     font-weight: 600;
-    line-height: 1.2;
+    line-height: 1.3;
     color: var(--oscuro);
     font-variant-numeric: tabular-nums;
 }
@@ -252,6 +266,7 @@
 .panel-ventas table {
     width: 100%;
     border-collapse: collapse;
+    font-family: var(--fuente-cuerpo);
     font-variant-numeric: tabular-nums;
 }
 
@@ -262,13 +277,13 @@
     text-align: left;
     white-space: nowrap;
     color: var(--oscuro);
-    border-bottom: 2px solid var(--arena);
+    border-bottom: 2px solid var(--borde);
 }
 
 .panel-ventas td {
     padding: 0.5rem 0.6rem;
     font-size: 0.92rem;
-    border-bottom: 1px solid #eee9dc;
+    border-bottom: 1px solid var(--linea);
 }
 
 .panel-ventas tr:last-child td {
@@ -294,6 +309,14 @@
     border-right: 1px solid var(--linea);
 }
 
+/* Matriz categoría x ocasión: 5 niveles de intensidad, derivados de la paleta */
+.panel-ventas .calor-0 { background: transparent; }
+.panel-ventas .calor-1 { background: color-mix(in srgb, var(--principal) 10%, #fff); }
+.panel-ventas .calor-2 { background: color-mix(in srgb, var(--principal) 24%, #fff); }
+.panel-ventas .calor-3 { background: color-mix(in srgb, var(--principal) 45%, #fff); }
+.panel-ventas .calor-4 { background: var(--principal); color: #fff; }
+.panel-ventas .calor-5 { background: #1e3a8a; color: #fff; }
+
 /* ---------- Teclado y movimiento ---------- */
 
 .panel-ventas a:focus-visible,
@@ -314,11 +337,11 @@
 
 @media (max-width: 576px) {
     .panel-ventas h1 {
-        font-size: 1.4rem;
+        font-size: 1.3rem;
     }
 
     .panel-ventas .kpi b {
-        font-size: 1.4rem;
+        font-size: 1.3rem;
     }
 
     .panel-ventas .chart {
@@ -362,11 +385,3 @@
         margin-bottom: 1rem;
     }
 }
-
-/* Matriz categoría x ocasión: 5 niveles de intensidad */
-.panel-ventas .calor-0 { background: transparent; }
-.panel-ventas .calor-1 { background: #eceedd; }
-.panel-ventas .calor-2 { background: #d3d6b4; }
-.panel-ventas .calor-3 { background: #aeb384; }
-.panel-ventas .calor-4 { background: #707444; color: #fff; }
-.panel-ventas .calor-5 { background: #4c5115; color: #fff; }

@@ -2,6 +2,9 @@
 {% load static humanize %}
 
 {% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{% static 'CSS/panel_admin/panel.css' %}">
 
 <div class="panel-ventas">
@@ -324,159 +327,173 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 
 <script>
-    const d = JSON.parse(document.getElementById("datos").textContent);
+(function () {
+    function iniciar() {
+        const d = JSON.parse(document.getElementById("datos").textContent);
 
-    const fmt = n => new Intl.NumberFormat("es-CL").format(n);
+        // ---- Colores: uno distinto por gráfico ----
+        const C = {
+            linea: "#2563eb",            // ingresos por día (línea)
+            lineaRelleno: "rgba(37, 99, 235, 0.15)",
+            pedidosDia: "#f59e0b",       // pedidos por día
+            semana: "#7c3aed",           // pedidos por día de la semana
+            productos: "#059669",        // productos (unidades)
+            productosIng: "#0891b2",     // productos (ingresos)
+            comunas: "#db2777",          // comunas (pedidos)
+            comunasIng: "#ea580c",       // comunas (ingresos)
+            carga: "#65a30d",            // entregas próximos 14 días
+            categoriasIng: "#dc2626",    // categorías (ingresos)
+            ocasionesIng: "#4f46e5"      // ocasiones (ingresos)
+        };
 
-    const dinero = v => new Intl.NumberFormat("es-CL", {
-        style: "currency",
-        currency: "CLP",
-        maximumFractionDigits: 0
-    }).format(v);
+        // Gráficos circulares: cada uno con su propia paleta
+        const ESTADOS = {
+            "Pendiente de preparación": "#f59e0b",
+            "En camino a destino": "#2563eb",
+            "Entregado": "#16a34a"
+        };
+        const PALETAS = {
+            categorias: ["#2563eb", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6", "#06b6d4", "#ec4899", "#84cc16", "#f97316", "#6366f1"],
+            ocasiones:  ["#ec4899", "#8b5cf6", "#06b6d4", "#f97316", "#10b981", "#ef4444", "#2563eb", "#eab308", "#14b8a6", "#a855f7"],
+            tipos:      ["#f97316", "#10b981", "#2563eb", "#ec4899", "#8b5cf6", "#eab308"],
+            conversion: ["#16a34a", "#dc2626"]   // pagados / sin pagar
+        };
 
-    const verde = "#707444";
-    const oscuro = "#4c5115";
-    const dorado = "#d9a441";
+        // ---- Tipografía y texto de los gráficos ----
+        const css = getComputedStyle(document.querySelector(".panel-ventas"));
+        const fuente = css.getPropertyValue("--fuente-cuerpo").trim() || '"Poppins", "Segoe UI", sans-serif';
+        Chart.defaults.font.family = fuente;
+        Chart.defaults.font.size = 12;
+        Chart.defaults.color = "#1f2937";
+        Chart.defaults.plugins.legend.labels.usePointStyle = true;
 
-    const paleta = [
-        verde, dorado, "#d98ca0", "#8fb0a0",
-        "#b5896a", "#9b8fb8", "#cfc6b1",
-        oscuro, "#c97b63", "#6f9ac1"
-    ];
+        const fmt = n => new Intl.NumberFormat("es-CL").format(n);
+        const dinero = x => new Intl.NumberFormat("es-CL", {
+            style: "currency",
+            currency: "CLP",
+            maximumFractionDigits: 0
+        }).format(x);
 
-    Chart.defaults.plugins.tooltip.callbacks.label = c => {
-        const esDinero = (c.dataset.label || "").includes("Ingresos");
+        Chart.defaults.plugins.tooltip.callbacks.label = c => {
+            const esDinero = (c.dataset.label || "").includes("Ingresos");
+            return `${c.dataset.label || c.label}: ${esDinero ? dinero(c.raw) : fmt(c.raw)}`;
+        };
 
-        return `${c.dataset.label || c.label}: ${
-            esDinero ? dinero(c.raw) : fmt(c.raw)
-        }`;
-    };
+        const barra = (id, labels, label, data, color, extra = {}) =>
+            new Chart(document.getElementById(id), {
+                type: "bar",
+                data: {
+                    labels,
+                    datasets: [{ label, data, backgroundColor: color, borderRadius: 4, maxBarThickness: 56 }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    ...extra
+                }
+            });
 
-    const barra = (id, labels, label, data, color, extra = {}) =>
-        new Chart(document.getElementById(id), {
+        const dona = (id, labels, label, data, colores) =>
+            new Chart(document.getElementById(id), {
+                type: "doughnut",
+                data: {
+                    labels,
+                    datasets: [{ label, data, backgroundColor: colores, borderColor: "#fff", borderWidth: 2 }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: "bottom" } }
+                }
+            });
+
+        // Ingresos (línea) y pedidos (barras) por día
+        new Chart(document.getElementById("gDias"), {
             type: "bar",
             data: {
-                labels,
-                datasets: [{
-                    label,
-                    data,
-                    backgroundColor: color
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                },
-                ...extra
-            }
-        });
-
-    const dona = (id, labels, label, data) =>
-        new Chart(document.getElementById(id), {
-            type: "doughnut",
-            data: {
-                labels,
-                datasets: [{
-                    label,
-                    data,
-                    backgroundColor: paleta
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { position: "bottom" }
-                }
-            }
-        });
-
-    // INGRESOS Y PEDIDOS POR DÍA
-    new Chart(document.getElementById("gDias"), {
-        type: "bar",
-        data: {
-            labels: d.dias.labels,
-            datasets: [
-                {
-                    type: "line",
-                    label: "Ingresos ($)",
-                    data: d.dias.ingresos,
-                    borderColor: oscuro,
-                    backgroundColor: "rgba(112,116,68,.15)",
-                    fill: true,
-                    tension: .3,
-                    yAxisID: "y"
-                },
-                {
-                    type: "bar",
-                    label: "Pedidos",
-                    data: d.dias.pedidos,
-                    backgroundColor: dorado,
-                    yAxisID: "y1"
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            interaction: {
-                mode: "index",
-                intersect: false
-            },
-            scales: {
-                y: {
-                    ticks: {
-                        callback: dinero
-                    }
-                },
-                y1: {
-                    position: "right",
-                    grid: {
-                        drawOnChartArea: false
+                labels: d.dias.labels,
+                datasets: [
+                    {
+                        type: "line",
+                        label: "Ingresos ($)",
+                        data: d.dias.ingresos,
+                        borderColor: C.linea,
+                        backgroundColor: C.lineaRelleno,
+                        pointBackgroundColor: C.linea,
+                        pointRadius: 2,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: .3,
+                        yAxisID: "y"
                     },
-                    ticks: {
-                        precision: 0
+                    {
+                        type: "bar",
+                        label: "Pedidos",
+                        data: d.dias.pedidos,
+                        backgroundColor: C.pedidosDia,
+                        borderRadius: 4,
+                        maxBarThickness: 28,
+                        yAxisID: "y1"
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: "index", intersect: false },
+                scales: {
+                    y: { ticks: { callback: dinero } },
+                    y1: {
+                        position: "right",
+                        grid: { drawOnChartArea: false },
+                        ticks: { precision: 0 }
                     }
                 }
             }
-        }
-    });
+        });
 
-    barra("gSemana", d.semana.labels, "Pedidos", d.semana.pedidos, verde,
-        { scales: { y: { ticks: { precision: 0 } } } });
+        barra("gSemana", d.semana.labels, "Pedidos", d.semana.pedidos, C.semana,
+            { scales: { y: { ticks: { precision: 0 } } } });
 
-    dona("gEstados", d.estados.labels, "Pedidos", d.estados.valores);
-    dona("gConv", d.conversion.labels, "Pedidos", d.conversion.valores);
+        dona("gEstados", d.estados.labels, "Pedidos", d.estados.valores,
+            d.estados.labels.map((l, i) => ESTADOS[l] || PALETAS.categorias[i % 10]));
+        dona("gConv", d.conversion.labels, "Pedidos", d.conversion.valores, PALETAS.conversion);
 
-    barra("gProd", d.productos.labels, "Unidades", d.productos.unidades, verde,
-        { indexAxis: "y", scales: { x: { ticks: { precision: 0 } } } });
+        barra("gProd", d.productos.labels, "Unidades", d.productos.unidades, C.productos,
+            { indexAxis: "y", scales: { x: { ticks: { precision: 0 } } } });
+        barra("gProdIng", d.productos.labels, "Ingresos ($)", d.productos.ingresos, C.productosIng,
+            { indexAxis: "y", scales: { x: { ticks: { callback: dinero } } } });
 
-    barra("gProdIng", d.productos.labels, "Ingresos ($)", d.productos.ingresos, dorado,
-        { indexAxis: "y", scales: { x: { ticks: { callback: dinero } } } });
+        barra("gCom", d.comunas.labels, "Pedidos", d.comunas.pedidos, C.comunas,
+            { scales: { y: { ticks: { precision: 0 } } } });
+        barra("gComIng", d.comunas.labels, "Ingresos ($)", d.comunas.ingresos, C.comunasIng,
+            { scales: { y: { ticks: { callback: dinero } } } });
 
-    barra("gCom", d.comunas.labels, "Pedidos", d.comunas.pedidos, verde,
-        { scales: { y: { ticks: { precision: 0 } } } });
+        barra("gCarga", d.carga.labels, "Entregas", d.carga.valores, C.carga,
+            { scales: { y: { ticks: { precision: 0 } } } });
 
-    barra("gComIng", d.comunas.labels, "Ingresos ($)", d.comunas.ingresos, dorado,
-        { scales: { y: { ticks: { callback: dinero } } } });
+        dona("gCat", d.categorias.labels, "Unidades", d.categorias.unidades, PALETAS.categorias);
+        barra("gCatIng", d.categorias.labels, "Ingresos ($)", d.categorias.ingresos, C.categoriasIng,
+            { scales: { y: { ticks: { callback: dinero } } } });
 
-    barra("gCarga", d.carga.labels, "Entregas", d.carga.valores, oscuro,
-        { scales: { y: { ticks: { precision: 0 } } } });
+        dona("gOca", d.ocasiones.labels, "Unidades", d.ocasiones.unidades, PALETAS.ocasiones);
+        barra("gOcaIng", d.ocasiones.labels, "Ingresos ($)", d.ocasiones.ingresos, C.ocasionesIng,
+            { scales: { y: { ticks: { callback: dinero } } } });
 
-    dona("gCat", d.categorias.labels, "Unidades", d.categorias.unidades);
+        dona("gTipo", d.tipos.labels, "Unidades", d.tipos.unidades, PALETAS.tipos);
+    }
 
-    barra("gCatIng", d.categorias.labels, "Ingresos ($)", d.categorias.ingresos, dorado,
-        { scales: { y: { ticks: { callback: dinero } } } });
+    // Espera a Poppins (máximo 1,5 s) antes de dibujar los gráficos
+    const fuentes = Promise.all([
+        document.fonts.load("400 13px Poppins"),
+        document.fonts.load("600 13px Poppins")
+    ]);
+    const limite = new Promise(r => setTimeout(r, 1500));
 
-    dona("gOca", d.ocasiones.labels, "Unidades", d.ocasiones.unidades);
-
-    barra("gOcaIng", d.ocasiones.labels, "Ingresos ($)", d.ocasiones.ingresos, dorado,
-        { scales: { y: { ticks: { callback: dinero } } } });
-
-    dona("gTipo", d.tipos.labels, "Unidades", d.tipos.unidades);
-
+    Promise.race([fuentes, limite]).then(iniciar, iniciar);
+})();
 </script>
 
 {% endblock %}
+
