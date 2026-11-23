@@ -1,28 +1,33 @@
 import json
-from datetime import date, timedelta
+from datetime import timedelta
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db.models import Avg, Count, DecimalField, ExpressionWrapper, F, Min, Q, Sum
+from django.db.models import (
+    Avg,
+    Count,
+    DecimalField,
+    ExpressionWrapper,
+    F,
+    Q,
+    Sum,
+)
 from django.db.models.functions import ExtractWeekDay, TruncDate
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 from django.views.decorators.csrf import csrf_exempt
 
 from carrito.carrito import Carrito
 from tienda.decorators import role_required
+
 from .forms import CheckoutForm
 from .models import ItemOrden, Orden, TarifaComuna
 from .services import WebpayService
 from .utils import enviar_correo_orden_exitosa
-from datetime import date, timedelta
-from django.db.models import (
-    Avg, Count, DecimalField, ExpressionWrapper,
-    F, Q, Sum
-)
-from django.db.models.functions import TruncDate, ExtractWeekDay
-from django.utils.dateparse import parse_date
+from django.http import HttpResponse
+from .reportes_pdf import generar_pdf_reporte
 
 def iniciar_checkout(request):
     carrito = Carrito(request)
@@ -295,8 +300,14 @@ def mis_pedidos(request):
 # BI 
 
 
-@role_required('admin')
-def panel(request):
+
+
+# =====================================================
+# BI - INTELIGENCIA DE NEGOCIOS FLOWERVIEW
+# =====================================================
+
+def obtener_datos_panel(request):
+
     hoy = timezone.localdate()
 
     # =====================================================
@@ -321,8 +332,10 @@ def panel(request):
     else:
         try:
             dias = int(dias_param)
+
             if dias not in [7, 30, 90, 365]:
                 dias = 30
+
         except (ValueError, TypeError):
             dias = 30
 
@@ -360,16 +373,72 @@ def panel(request):
 
     resumen_anterior = pagadas_anterior.aggregate(
         ingresos=Sum('total'),
-        pedidos=Count('id')
+        pedidos=Count('id'),
+        ticket=Avg('total'),
+        envios=Sum('costo_envio')
     )
 
-    # Función para calcular variación porcentual
+    # =====================================================
+    # 3. PRODUCTOS Y UNIDADES
+    # =====================================================
+
+    items = ItemOrden.objects.filter(
+        orden__in=pagadas
+    )
+
+    subtotal_expr = ExpressionWrapper(
+        F('precio_unitario') * F('cantidad'),
+        output_field=DecimalField(
+            max_digits=20,
+            decimal_places=0
+        )
+    )
+
+    items_validos = items.filter(
+        precio_unitario__isnull=False,
+        cantidad__isnull=False
+    ).annotate(
+        subtotal_calculado=subtotal_expr
+    )
+
+    # Unidades vendidas del periodo actual
+    unidades = items_validos.aggregate(
+        total=Sum('cantidad')
+    )['total'] or 0
+
+    # Ingresos exclusivamente por productos
+    ventas_productos = items_validos.aggregate(
+        total=Sum('subtotal_calculado')
+    )['total'] or 0
+
+    # Productos vendidos durante el periodo anterior
+    items_anterior = ItemOrden.objects.filter(
+        orden__in=pagadas_anterior,
+        precio_unitario__isnull=False,
+        cantidad__isnull=False
+    ).annotate(
+        subtotal_calculado=subtotal_expr
+    )
+
+    resumen_productos_anterior = items_anterior.aggregate(
+        ventas=Sum('subtotal_calculado'),
+        unidades=Sum('cantidad')
+    )
+
+    # =====================================================
+    # 4. VARIACIONES PORCENTUALES
+    # =====================================================
+
     def variacion(actual, anterior):
-        if not anterior:
+
+        if anterior is None or anterior == 0:
             return None
 
         return round(
-            ((float(actual or 0) - float(anterior)) / float(anterior)) * 100,
+            (
+                (float(actual or 0) - float(anterior))
+                / float(anterior)
+            ) * 100,
             1
         )
 
@@ -383,29 +452,30 @@ def panel(request):
         resumen_anterior['pedidos']
     )
 
-    # =====================================================
-    # 3. PRODUCTOS Y UNIDADES
-    # =====================================================
-
-    items = ItemOrden.objects.filter(
-        orden__in=pagadas
+    var_ventas_productos = variacion(
+        ventas_productos,
+        resumen_productos_anterior['ventas']
     )
 
-    subtotal_expr = ExpressionWrapper(
-        F('precio_unitario') * F('cantidad'),
-        output_field=DecimalField(max_digits=20, decimal_places=0)
+    var_envios = variacion(
+        resumen['envios'],
+        resumen_anterior['envios']
     )
 
-    items_validos = items.filter(
-        precio_unitario__isnull=False,
-        cantidad__isnull=False
-    ).annotate(subtotal_calculado=subtotal_expr)
+    var_ticket = variacion(
+        resumen['ticket'],
+        resumen_anterior['ticket']
+    )
 
-    unidades = items.aggregate(
-        total=Sum('cantidad')
-    )['total'] or 0
+    var_unidades = variacion(
+        unidades,
+        resumen_productos_anterior['unidades']
+    )
 
-    # Ranking de productos
+    # =====================================================
+    # 5. RANKING DE PRODUCTOS
+    # =====================================================
+
     top_productos = list(
         items_validos.values('producto_nombre')
         .annotate(
@@ -416,7 +486,61 @@ def panel(request):
     )
 
     # =====================================================
-    # 4. VENTAS POR DÍA
+    # 6. ANÁLISIS DE CONCENTRACIÓN COMERCIAL
+    # =====================================================
+
+    total_ventas_productos = float(
+        ventas_productos or 0
+    )
+
+    productos_concentracion = list(
+        items_validos.values('producto_nombre')
+        .annotate(
+            unidades=Sum('cantidad'),
+            ingresos=Sum('subtotal_calculado')
+        )
+        .order_by('-ingresos')
+    )
+
+    acumulado = 0
+    concentracion_productos = []
+
+    for producto in productos_concentracion:
+
+        ingresos_producto = float(
+            producto['ingresos'] or 0
+        )
+
+        participacion = (
+            (ingresos_producto / total_ventas_productos) * 100
+            if total_ventas_productos > 0 else 0
+        )
+
+        acumulado += participacion
+
+        concentracion_productos.append({
+            'producto': producto['producto_nombre'],
+            'unidades': int(producto['unidades'] or 0),
+            'ingresos': int(ingresos_producto),
+            'participacion': round(participacion, 2),
+            'participacion_acumulada': round(acumulado, 2),
+        })
+
+    top_5_ingresos = sum(
+        producto['ingresos']
+        for producto in concentracion_productos[:5]
+    )
+
+    concentracion_top_5 = (
+        round(
+            (top_5_ingresos / total_ventas_productos) * 100,
+            2
+        )
+        if total_ventas_productos > 0 else 0
+    )
+
+    # =====================================================
+    # 7. VENTAS POR DÍA
     # =====================================================
 
     ventas_dia = pagadas.annotate(
@@ -436,7 +560,10 @@ def panel(request):
     ]
 
     datos_dias = {
-        'labels': [d.strftime('%d/%m') for d in dias_lista],
+        'labels': [
+            d.strftime('%d/%m')
+            for d in dias_lista
+        ],
         'ingresos': [
             int(ventas_dia_dict[d]['ingresos'] or 0)
             if d in ventas_dia_dict else 0
@@ -450,7 +577,7 @@ def panel(request):
     }
 
     # =====================================================
-    # 5. PEDIDOS POR DÍA DE LA SEMANA
+    # 8. PEDIDOS POR DÍA DE LA SEMANA
     # =====================================================
 
     semana_qs = pagadas.annotate(
@@ -465,22 +592,32 @@ def panel(request):
     }
 
     nombres_semana = [
-        'Lunes', 'Martes', 'Miércoles',
-        'Jueves', 'Viernes', 'Sábado', 'Domingo'
+        'Lunes',
+        'Martes',
+        'Miércoles',
+        'Jueves',
+        'Viernes',
+        'Sábado',
+        'Domingo'
     ]
 
     datos_semana = {
         'labels': nombres_semana,
         'pedidos': [
-            semana_dict.get(i, 0) for i in range(7)
+            semana_dict.get(i, 0)
+            for i in range(7)
         ]
     }
 
     # =====================================================
-    # 6. ESTADOS DE ENVÍO
+    # 9. ESTADOS DE ENVÍO
     # =====================================================
 
-    estados = ['pendiente', 'en_camino', 'entregado']
+    estados = [
+        'pendiente',
+        'en_camino',
+        'entregado'
+    ]
 
     datos_estados = {
         'labels': [
@@ -494,15 +631,20 @@ def panel(request):
     }
 
     # =====================================================
-    # 7. CONVERSIÓN
+    # 10. ÓRDENES PAGADAS Y SIN PAGAR
     # =====================================================
 
     pedidos_pagados = pagadas.count()
-    sin_pagar = ordenes_periodo.filter(pagado=False).count()
+
+    sin_pagar = ordenes_periodo.filter(
+        pagado=False
+    ).count()
+
     total_ordenes = pedidos_pagados + sin_pagar
 
     conversion = round(
-        (pedidos_pagados / total_ordenes) * 100, 1
+        (pedidos_pagados / total_ordenes) * 100,
+        1
     ) if total_ordenes else 0
 
     datos_conversion = {
@@ -511,7 +653,7 @@ def panel(request):
     }
 
     # =====================================================
-    # 8. VENTAS POR COMUNA
+    # 11. VENTAS POR COMUNA
     # =====================================================
 
     comunas_qs = pagadas.values('comuna').annotate(
@@ -520,24 +662,33 @@ def panel(request):
     ).order_by('-pedidos')[:10]
 
     datos_comunas = {
-        'labels': [c['comuna'] for c in comunas_qs],
-        'pedidos': [c['pedidos'] for c in comunas_qs],
-        'ingresos': [int(c['ingresos'] or 0) for c in comunas_qs]
+        'labels': [
+            c['comuna']
+            for c in comunas_qs
+        ],
+        'pedidos': [
+            c['pedidos']
+            for c in comunas_qs
+        ],
+        'ingresos': [
+            int(c['ingresos'] or 0)
+            for c in comunas_qs
+        ]
     }
 
     # =====================================================
-    # 9. ENTREGAS PRÓXIMOS 14 DÍAS
+    # 12. ENTREGAS PRÓXIMOS 14 DÍAS
     # =====================================================
 
     fecha_limite = hoy + timedelta(days=13)
 
-    carga_qs = (
-        Orden.objects.filter(
-            pagado=True,
-            fecha_entrega__range=(hoy, fecha_limite)
-        )
-        .values('fecha_entrega')
-        .annotate(total=Count('id'))
+    carga_qs = Orden.objects.filter(
+        pagado=True,
+        fecha_entrega__range=(hoy, fecha_limite)
+    ).values(
+        'fecha_entrega'
+    ).annotate(
+        total=Count('id')
     )
 
     carga_dict = {
@@ -552,20 +703,24 @@ def panel(request):
 
     datos_carga = {
         'labels': [
-            f.strftime('%d/%m') for f in fechas_carga
+            f.strftime('%d/%m')
+            for f in fechas_carga
         ],
         'valores': [
-            carga_dict.get(f, 0) for f in fechas_carga
+            carga_dict.get(f, 0)
+            for f in fechas_carga
         ]
     }
 
     # =====================================================
-    # 10. CATEGORÍAS, OCASIONES Y TIPOS
+    # 13. CATEGORÍAS, OCASIONES Y TIPOS
     # =====================================================
 
     def ranking_campo(campo):
+
         return list(
-            items_validos.exclude(**{campo: ''})
+            items_validos
+            .exclude(**{campo: ''})
             .values(campo)
             .annotate(
                 unidades=Sum('cantidad'),
@@ -575,73 +730,158 @@ def panel(request):
         )
 
     def datos_ranking(campo):
+
         resultados = ranking_campo(campo)
 
         return {
-            'labels': [r[campo] for r in resultados],
+            'labels': [
+                r[campo]
+                for r in resultados
+            ],
             'unidades': [
-                int(r['unidades'] or 0) for r in resultados
+                int(r['unidades'] or 0)
+                for r in resultados
             ],
             'ingresos': [
-                int(r['ingresos'] or 0) for r in resultados
+                int(r['ingresos'] or 0)
+                for r in resultados
             ]
         }
 
-    datos_categorias = datos_ranking('categoria_nombre')
-    datos_ocasiones = datos_ranking('ocasion_nombre')
-    datos_tipos = datos_ranking('tipo_nombre')
+    datos_categorias = datos_ranking(
+        'categoria_nombre'
+    )
+
+    datos_ocasiones = datos_ranking(
+        'ocasion_nombre'
+    )
+
+    datos_tipos = datos_ranking(
+        'tipo_nombre'
+    )
 
     # =====================================================
-    # 11. MATRIZ CATEGORÍAS VS OCASIONES
+    # 14. ANÁLISIS DE PARTICIPACIÓN POR SEGMENTO
+    # =====================================================
+
+    def calcular_participacion(campo):
+
+        resultados = list(
+            items_validos
+            .exclude(**{campo: ''})
+            .values(campo)
+            .annotate(
+                unidades=Sum('cantidad'),
+                ingresos=Sum('subtotal_calculado')
+            )
+            .order_by('-ingresos')
+        )
+
+        total = float(ventas_productos or 0)
+
+        resultado = []
+
+        for registro in resultados:
+
+            ingresos = float(
+                registro['ingresos'] or 0
+            )
+
+            participacion = (
+                (ingresos / total) * 100
+                if total > 0 else 0
+            )
+
+            resultado.append({
+                'nombre': registro[campo],
+                'unidades': int(
+                    registro['unidades'] or 0
+                ),
+                'ingresos': int(ingresos),
+                'participacion': round(
+                    participacion,
+                    2
+                ),
+            })
+
+        return resultado
+
+    analisis_categorias = calcular_participacion(
+        'categoria_nombre'
+    )
+
+    analisis_ocasiones = calcular_participacion(
+        'ocasion_nombre'
+    )
+
+    analisis_tipos = calcular_participacion(
+        'tipo_nombre'
+    )
+
+    # =====================================================
+    # 15. MATRIZ CATEGORÍAS VS OCASIONES
     # =====================================================
 
     matriz_qs = (
         items_validos
         .exclude(categoria_nombre='')
         .exclude(ocasion_nombre='')
-        .values('categoria_nombre', 'ocasion_nombre')
-        .annotate(unidades=Sum('cantidad'))
+        .values(
+            'categoria_nombre',
+            'ocasion_nombre'
+        )
+        .annotate(
+            unidades=Sum('cantidad')
+        )
     )
 
     matriz_dict = {
-        (r['categoria_nombre'], r['ocasion_nombre']): r['unidades']
+        (
+            r['categoria_nombre'],
+            r['ocasion_nombre']
+        ): r['unidades']
         for r in matriz_qs
     }
 
     categorias = sorted({
-        k[0] for k in matriz_dict
+        clave[0]
+        for clave in matriz_dict
     })
 
     ocasiones = sorted({
-        k[1] for k in matriz_dict
+        clave[1]
+        for clave in matriz_dict
     })
 
-    max_matriz = max(matriz_dict.values(), default=1)
+    max_matriz = max(
+        matriz_dict.values(),
+        default=1
+    )
 
     mapa = []
-    for cat in categorias:
-        celdas = []
-        for oca in ocasiones_cols:
-            v = cruce.get((cat, oca), 0)
-            proporcion = v / maximo if maximo else 0
-            nivel = 0 if v == 0 else min(5, int(proporcion * 5) + 1)
-            celdas.append({"valor": v, "nivel": nivel})
-        mapa.append({"categoria": cat, "celdas": celdas})
 
     for categoria in categorias:
+
         celdas = []
 
         for ocasion in ocasiones:
-            valor = matriz_dict.get((categoria, ocasion), 0)
 
-            alpha = round(
-                0.08 + (valor / max_matriz) * 0.77, 2
-            ) if valor else 0
+            valor = matriz_dict.get(
+                (categoria, ocasion),
+                0
+            )
+
+            nivel = (
+                0 if not valor
+                else min(
+                    5,
+                    int((valor / max_matriz) * 5) + 1
+                )
+            )
 
             celdas.append({
                 'valor': valor,
-                'alpha': alpha,
-                'oscuro': alpha > 0.45
+                'nivel': nivel
             })
 
         mapa.append({
@@ -650,29 +890,37 @@ def panel(request):
         })
 
     # =====================================================
-    # 12. PRODUCTOS MÁS VENDIDOS POR OCASIÓN
+    # 16. PRODUCTOS MÁS VENDIDOS POR OCASIÓN
     # =====================================================
 
     opciones_ocasion = sorted({
         r['ocasion_nombre']
-        for r in items.exclude(ocasion_nombre='')
-        .values('ocasion_nombre').distinct()
+        for r in items
+        .exclude(ocasion_nombre='')
+        .values('ocasion_nombre')
+        .distinct()
     })
 
-    ocasion_sel = request.GET.get('ocasion', '')
+    ocasion_sel = request.GET.get(
+        'ocasion',
+        ''
+    )
 
     items_ocasion = items_validos
 
     if ocasion_sel in opciones_ocasion:
+
         items_ocasion = items_ocasion.filter(
             ocasion_nombre=ocasion_sel
         )
+
     else:
         ocasion_sel = ''
 
     top_por_ocasion = list(
         items_ocasion.values(
-            'producto_nombre', 'categoria_nombre'
+            'producto_nombre',
+            'categoria_nombre'
         )
         .annotate(
             unidades=Sum('cantidad'),
@@ -682,7 +930,7 @@ def panel(request):
     )
 
     # =====================================================
-    # 13. PRÓXIMAS ENTREGAS
+    # 17. PRÓXIMAS ENTREGAS
     # =====================================================
 
     proximas = (
@@ -691,11 +939,14 @@ def panel(request):
             fecha_entrega__range=(hoy, fecha_limite)
         )
         .exclude(estado_envio='entregado')
-        .order_by('fecha_entrega', 'id')[:10]
+        .order_by(
+            'fecha_entrega',
+            'id'
+        )[:10]
     )
 
     # =====================================================
-    # 14. INDICADORES OPERATIVOS
+    # 18. INDICADORES OPERATIVOS
     # =====================================================
 
     por_preparar = pagadas.filter(
@@ -712,7 +963,7 @@ def panel(request):
     ).count()
 
     # =====================================================
-    # 15. CONTEXTO PARA HTML
+    # 19. DATOS PARA GRÁFICOS DEL PANEL
     # =====================================================
 
     datos = {
@@ -720,11 +971,22 @@ def panel(request):
         'semana': datos_semana,
         'estados': datos_estados,
         'conversion': datos_conversion,
+
         'productos': {
-            'labels': [p['producto_nombre'] for p in top_productos],
-            'unidades': [int(p['unidades'] or 0) for p in top_productos],
-            'ingresos': [int(p['ingresos'] or 0) for p in top_productos],
+            'labels': [
+                p['producto_nombre']
+                for p in top_productos
+            ],
+            'unidades': [
+                int(p['unidades'] or 0)
+                for p in top_productos
+            ],
+            'ingresos': [
+                int(p['ingresos'] or 0)
+                for p in top_productos
+            ],
         },
+
         'comunas': datos_comunas,
         'carga': datos_carga,
         'categorias': datos_categorias,
@@ -732,42 +994,110 @@ def panel(request):
         'tipos': datos_tipos,
     }
 
+    # =====================================================
+    # 20. CONTEXTO FINAL
+    # =====================================================
+
     contexto = {
         'datos': datos,
 
+        # Indicadores financieros
         'ingresos': int(resumen['ingresos'] or 0),
+        'ventas_productos': int(ventas_productos or 0),
+        'envios': int(resumen['envios'] or 0),
+
         'pedidos': pedidos_pagados,
         'ticket': int(resumen['ticket'] or 0),
         'unidades': int(unidades),
-        'envios': int(resumen['envios'] or 0),
 
+        # Órdenes
         'conversion': conversion,
         'sin_pagar': sin_pagar,
 
+        # Operaciones
         'por_preparar': por_preparar,
         'en_camino': en_camino,
         'entregas_hoy': entregas_hoy,
 
+        # Comparación de periodos
         'var_ingresos': var_ingresos,
         'var_pedidos': var_pedidos,
+        'var_ventas_productos': var_ventas_productos,
+        'var_envios': var_envios,
+        'var_ticket': var_ticket,
+        'var_unidades': var_unidades,
 
+        'desde_anterior': desde_anterior.isoformat(),
+        'hasta_anterior': hasta_anterior.isoformat(),
+
+        # Filtros
         'opciones': opciones,
         'rango': rango,
         'desde': desde.isoformat(),
         'hasta': hasta.isoformat(),
 
+        # Productos
         'top_productos': top_productos,
+        'concentracion_productos': concentracion_productos,
+        'concentracion_top_5': concentracion_top_5,
+
+        # Análisis por segmento
+        'analisis_categorias': analisis_categorias,
+        'analisis_ocasiones': analisis_ocasiones,
+        'analisis_tipos': analisis_tipos,
+
+        # Ocasiones
         'top_por_ocasion': top_por_ocasion,
         'opciones_ocasion': opciones_ocasion,
         'ocasion_sel': ocasion_sel,
 
+        # Matriz
         'mapa': mapa,
         'ocasiones_cols': ocasiones,
+
+        # Entregas
         'proximas': proximas,
     }
+
+    return contexto
+
+
+# =====================================================
+# PANEL ADMINISTRATIVO
+# =====================================================
+
+@role_required('admin')
+def panel(request):
+
+    contexto = obtener_datos_panel(request)
 
     return render(
         request,
         'admin/panel.html',
         contexto
     )
+
+
+# =====================================================
+# EXPORTAR REPORTE PDF
+# =====================================================
+
+@role_required('admin')
+def exportar_reporte_pdf(request):
+
+    contexto = obtener_datos_panel(request)
+
+    pdf = generar_pdf_reporte(contexto)
+
+    response = HttpResponse(
+        pdf,
+        content_type='application/pdf'
+    )
+
+    response['Content-Disposition'] = (
+        'attachment; filename="reporte_ventas_flowerview.pdf"'
+    )
+
+    return response
+
+
