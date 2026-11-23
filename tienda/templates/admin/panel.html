@@ -11,28 +11,47 @@
 
 
 
-    <div class="top">
-        <h1>Panel de ventas</h1>
+<div class="top">
+    <h1>Panel de ventas</h1>
+
+    <div class="acciones-panel">
 
         <div class="filtros">
             {% for valor, texto in opciones %}
                 <a class="chip {% if valor == rango %}on{% endif %}"
-                   href="?dias={{ valor }}">
+                   href="?dias={{ valor }}{% if ocasion_sel %}&ocasion={{ ocasion_sel|urlencode }}{% endif %}">
                     {{ texto }}
                 </a>
             {% endfor %}
         </div>
-    </div>
 
-    <form class="rango" method="get">
-        <span>Rango personalizado:</span>
-        <input type="date" name="desde" value="{{ desde }}" required>
-        <input type="date" name="hasta" value="{{ hasta }}" required>
-        <button type="submit">Aplicar</button>
-        <span class="fecha-info">
-            Mostrando del {{ desde }} al {{ hasta }}
-        </span>
-    </form>
+        <a
+    href="{% url 'exportar_reporte_pdf' %}?dias={{ rango }}{% if desde %}&desde={{ desde }}{% endif %}{% if hasta %}&hasta={{ hasta }}{% endif %}{% if ocasion_sel %}&ocasion={{ ocasion_sel|urlencode }}{% endif %}"
+    class="btn-pdf"
+>
+    <i class="bi bi-file-earmark-pdf"></i>
+    Descargar reporte PDF
+</a>
+
+    </div>
+</div>
+
+<form class="rango" method="get">
+    <span>Rango personalizado:</span>
+
+    <input type="date" name="desde" value="{{ desde }}" required>
+    <input type="date" name="hasta" value="{{ hasta }}" required>
+
+    {% if ocasion_sel %}
+        <input type="hidden" name="ocasion" value="{{ ocasion_sel }}">
+    {% endif %}
+
+    <button type="submit">Aplicar</button>
+
+    <span class="fecha-info">
+        Mostrando del {{ desde }} al {{ hasta }}
+    </span>
+</form>
 
     {% if pedidos == 0 %}
         <div class="vacio">
@@ -79,7 +98,7 @@
         </div>
 
         <div class="card kpi">
-            <span>Conversión</span>
+            <span>Tasa de órdenes pagadas</span>
             <b>{{ conversion }}%</b>
             <small>{{ sin_pagar }} sin pagar</small>
         </div>
