@@ -28,6 +28,7 @@ urlpatterns = [
     path('pedidos/', include('pedidos.urls')),
     path('chatbot/', include('chatbot.urls')),
 
+    path('chatbot_usuario/', include('chatbot_usuario.urls')),
 
 ]
 
