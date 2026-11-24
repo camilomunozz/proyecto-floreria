@@ -1,162 +1,334 @@
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
 
-    // ==========================================
-    // ELEMENTOS DEL CHATBOT
-    // ==========================================
+    // =========================================
+    // CONFIGURACIÓN
+    // =========================================
+
+    const API_URL = "/chatbot/api/chat/";
+    const CART_URL = "/carrito/agregar/";
 
     const toggleButton = document.getElementById("chatbot-toggle");
-    const closeButton = document.getElementById("chatbot-close");
     const chatWindow = document.getElementById("chatbot-window");
+    const closeButton = document.getElementById("chatbot-close");
+    const messagesContainer = document.getElementById("chatbot-messages");
     const chatForm = document.getElementById("chatbot-form");
     const chatInput = document.getElementById("chatbot-input");
-    const chatSend = document.getElementById("chatbot-send");
-    const messagesContainer = document.getElementById("chatbot-messages");
+    const sendButton = document.getElementById("chatbot-send");
 
-    // Evitar errores si el widget no está presente
     if (
         !toggleButton ||
-        !closeButton ||
         !chatWindow ||
+        !closeButton ||
+        !messagesContainer ||
         !chatForm ||
-        !chatInput ||
-        !chatSend ||
-        !messagesContainer
+        !chatInput
     ) {
+        console.error("FlowerView: No se encontraron todos los elementos del chatbot.");
         return;
     }
 
-    const API_URL = "/chatbot/api/chat/";
-
     let isSending = false;
 
-    // ==========================================
-    // ABRIR Y CERRAR CHAT
-    // ==========================================
+    // =========================================
+    // ABRIR Y CERRAR CHATBOT
+    // =========================================
 
-    function toggleChat(open) {
-        chatWindow.hidden = !open;
+    function openChat() {
+        chatWindow.hidden = false;
+        chatWindow.classList.add("active");
+        toggleButton.setAttribute("aria-expanded", "true");
 
-        toggleButton.setAttribute(
-            "aria-expanded",
-            String(open)
-        );
-
-        if (open) {
-            chatInput.focus();
-        }
+        chatInput.focus();
     }
 
-    toggleButton.addEventListener("click", function () {
-        toggleChat(chatWindow.hidden);
-    });
-
-    closeButton.addEventListener("click", function () {
-        toggleChat(false);
-    });
-
-    // ==========================================
-    // AGREGAR MENSAJES
-    // ==========================================
-
-    function addMessage(message, sender) {
-        const messageElement = document.createElement("div");
-
-        messageElement.classList.add(
-            "chatbot-message",
-            sender === "user"
-                ? "chatbot-message-user"
-                : "chatbot-message-bot"
-        );
-
-        // Mostrar el contenido como texto seguro
-        messageElement.textContent = message;
-
-        messagesContainer.appendChild(messageElement);
-
-        messagesContainer.scrollTop =
-            messagesContainer.scrollHeight;
-
-        return messageElement;
+    function closeChat() {
+        chatWindow.hidden = true;
+        chatWindow.classList.remove("active");
+        toggleButton.setAttribute("aria-expanded", "false");
     }
 
-    // ==========================================
-    // INDICADOR DE RESPUESTA
-    // ==========================================
+    toggleButton.addEventListener("click", openChat);
+    closeButton.addEventListener("click", closeChat);
+
+    // =========================================
+    // CSRF
+    // =========================================
+
+    function getCsrfToken() {
+        const csrfInput = chatForm.querySelector(
+            '[name="csrfmiddlewaretoken"]'
+        );
+
+        return csrfInput ? csrfInput.value : "";
+    }
+
+    // =========================================
+    // MENSAJES
+    // =========================================
+
+    function addMessage(text, sender = "chatbot-message-bot") {
+        const message = document.createElement("div");
+
+        message.classList.add("chatbot-message", sender);
+        message.textContent = text;
+
+        messagesContainer.appendChild(message);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        return message;
+    }
+
+    // =========================================
+    // INDICADOR DE ESCRITURA
+    // =========================================
 
     function showTypingIndicator() {
         const indicator = document.createElement("div");
 
         indicator.classList.add(
             "chatbot-message",
-            "chatbot-message-bot",
-            "chatbot-message-loading"
+            "chatbot-message-bot"
         );
 
+        indicator.id = "chatbot-typing";
         indicator.textContent = "FlowerView está escribiendo...";
 
-        indicator.setAttribute("aria-label", "Esperando respuesta");
-
         messagesContainer.appendChild(indicator);
-
-        messagesContainer.scrollTop =
-            messagesContainer.scrollHeight;
-
-        return indicator;
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
     }
 
-    // ==========================================
-    // ESTADO DEL FORMULARIO
-    // ==========================================
+    function removeTypingIndicator() {
+        const indicator = document.getElementById("chatbot-typing");
 
-    function setSendingState(sending) {
-        isSending = sending;
-
-        chatInput.disabled = sending;
-        chatSend.disabled = sending;
-
-        chatForm.setAttribute(
-            "aria-busy",
-            String(sending)
-        );
-
-        chatSend.textContent = sending ? "…" : "➤";
+        if (indicator) {
+            indicator.remove();
+        }
     }
 
-    // ==========================================
-    // CONEXIÓN CON DJANGO Y GEMINI
-    // ==========================================
+    // =========================================
+    // FORMATO DE PRECIOS
+    // =========================================
 
-    async function sendMessage(message) {
+    function formatPrice(price) {
+        const amount = Number(price);
 
-        const csrfToken = chatForm.querySelector(
-            '[name="csrfmiddlewaretoken"]'
-        )?.value;
+        if (!Number.isFinite(amount)) {
+            return "$" + price;
+        }
 
-        if (!csrfToken) {
-            addMessage(
-                "No pudimos validar la solicitud. Recarga la página e inténtalo nuevamente.",
-                "bot"
-            );
+        return new Intl.NumberFormat("es-CL", {
+            style: "currency",
+            currency: "CLP",
+            maximumFractionDigits: 0
+        }).format(amount);
+    }
+
+    // =========================================
+    // ACTUALIZAR CONTADOR DEL CARRITO
+    // =========================================
+
+    function updateCartCounter(cantidad) {
+        const counter = document.getElementById("cantidad_carrito");
+
+        if (counter) {
+            counter.textContent = cantidad;
+        }
+
+        localStorage.setItem("cart_count", String(cantidad));
+    }
+
+    // =========================================
+    // CREAR TARJETA DE PRODUCTO
+    // =========================================
+
+    function createProductCard(product) {
+        const card = document.createElement("div");
+        card.classList.add("chatbot-product-card");
+
+        // Imagen
+        const imageContainer = document.createElement("div");
+        imageContainer.classList.add("chatbot-product-image-container");
+
+        const image = document.createElement("img");
+
+        image.classList.add("chatbot-product-image");
+        image.alt = product.nombre || "Producto FlowerView";
+        image.loading = "lazy";
+
+        if (product.imagen) {
+            image.src = product.imagen;
+        } else {
+            imageContainer.classList.add("no-image");
+        }
+
+        imageContainer.appendChild(image);
+
+        // Información
+        const information = document.createElement("div");
+        information.classList.add("chatbot-product-information");
+
+        const name = document.createElement("h4");
+        name.classList.add("chatbot-product-name");
+        name.textContent = product.nombre || "Producto";
+
+        const description = document.createElement("p");
+        description.classList.add("chatbot-product-description");
+        description.textContent = product.descripcion || "";
+
+        const price = document.createElement("p");
+        price.classList.add("chatbot-product-price");
+        price.textContent = formatPrice(product.precio);
+
+        // Botón carrito
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.classList.add("chatbot-add-cart");
+        button.textContent = "Agregar al carrito";
+
+        button.addEventListener("click", () => {
+            addToCart(product, button);
+        });
+
+        information.appendChild(name);
+        information.appendChild(description);
+        information.appendChild(price);
+        information.appendChild(button);
+
+        card.appendChild(imageContainer);
+        card.appendChild(information);
+
+        return card;
+    }
+
+    // =========================================
+    // MOSTRAR PRODUCTOS
+    // =========================================
+
+    function showProducts(products) {
+        if (!Array.isArray(products) || products.length === 0) {
             return;
         }
 
-        const typingIndicator = showTypingIndicator();
+        const container = document.createElement("div");
+        container.classList.add("chatbot-products-container");
 
-        setSendingState(true);
+        const title = document.createElement("h4");
+
+        title.classList.add("chatbot-products-title");
+        title.textContent = "Productos recomendados";
+
+        container.appendChild(title);
+
+        products.slice(0, 3).forEach(product => {
+            if (product.id) {
+                container.appendChild(createProductCard(product));
+            }
+        });
+
+        if (container.children.length > 1) {
+            messagesContainer.appendChild(container);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+    }
+
+    // =========================================
+    // AGREGAR AL CARRITO
+    // =========================================
+
+    async function addToCart(product, button) {
+        if (button.disabled) {
+            return;
+        }
+
+        const originalText = button.textContent;
+
+        button.disabled = true;
+        button.textContent = "Agregando...";
 
         try {
+            const csrfToken = getCsrfToken();
 
-            const response = await fetch(API_URL, {
+            if (!csrfToken) {
+                throw new Error("No se encontró el token CSRF.");
+            }
+
+            const formData = new URLSearchParams();
+
+            formData.append("action", "post");
+            formData.append("producto_id", product.id);
+            formData.append("cantidad", "1");
+
+            const response = await fetch(CART_URL, {
                 method: "POST",
-
                 headers: {
-                    "Content-Type": "application/json",
+                    "Content-Type": "application/x-www-form-urlencoded",
                     "X-CSRFToken": csrfToken
                 },
-
                 credentials: "same-origin",
+                body: formData.toString()
+            });
 
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.error || "No se pudo agregar el producto."
+                );
+            }
+
+            // Actualizar contador de la navbar
+            if (data.cantidad !== undefined) {
+                updateCartCounter(data.cantidad);
+            }
+
+            button.textContent = "✓ Agregado al carrito";
+
+            addMessage(
+                `${data.nombre || product.nombre} se agregó a tu carrito. 🌷`
+            );
+
+        } catch (error) {
+            console.error("Error al agregar al carrito:", error);
+
+            button.disabled = false;
+            button.textContent = originalText;
+
+            addMessage(
+                "No pudimos agregar el producto al carrito. Inténtalo nuevamente."
+            );
+        }
+    }
+
+    // =========================================
+    // ENVIAR MENSAJE
+    // =========================================
+
+    async function sendMessage(message) {
+        if (!message || isSending) {
+            return;
+        }
+
+        isSending = true;
+
+        chatInput.disabled = true;
+
+        if (sendButton) {
+            sendButton.disabled = true;
+        }
+
+        addMessage(message, "chatbot-message-user");
+        showTypingIndicator();
+
+        try {
+            const response = await fetch(API_URL, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": getCsrfToken()
+                },
+                credentials: "same-origin",
                 body: JSON.stringify({
                     mensaje: message
                 })
@@ -164,83 +336,60 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const data = await response.json();
 
-            // Comprobar errores del servidor
             if (!response.ok) {
                 throw new Error(
-                    data.error ||
-                    "No pudimos procesar tu mensaje."
+                    data.error || "No se pudo obtener una respuesta."
                 );
             }
 
-            // Comprobar respuesta de Gemini
-            if (
-                typeof data.respuesta !== "string" ||
-                !data.respuesta.trim()
-            ) {
-                throw new Error(
-                    "El asistente no devolvió una respuesta."
-                );
+            removeTypingIndicator();
+
+            if (data.respuesta) {
+                addMessage(data.respuesta);
             }
 
-            addMessage(data.respuesta, "bot");
+            showProducts(data.productos);
 
         } catch (error) {
+            console.error("Error en el chatbot:", error);
 
-            console.error(
-                "Error en el chatbot FlowerView:",
-                error
-            );
+            removeTypingIndicator();
 
             addMessage(
-                error.message ||
-                "No pudimos conectar con nuestro asistente. Inténtalo nuevamente.",
-                "bot"
+                "Lo siento, ocurrió un problema al procesar tu mensaje. Inténtalo nuevamente. 🌷"
             );
 
         } finally {
+            removeTypingIndicator();
 
-            // Eliminar indicador de escritura
-            typingIndicator.remove();
+            isSending = false;
 
-            // Habilitar nuevamente el formulario
-            setSendingState(false);
+            chatInput.disabled = false;
+
+            if (sendButton) {
+                sendButton.disabled = false;
+            }
 
             chatInput.focus();
         }
     }
 
-    // ==========================================
-    // ENVIAR MENSAJE
-    // ==========================================
+    // =========================================
+    // FORMULARIO
+    // =========================================
 
-    chatForm.addEventListener("submit", function (event) {
-
+    chatForm.addEventListener("submit", event => {
         event.preventDefault();
-
-        // Evitar solicitudes simultáneas
-        if (isSending) return;
 
         const message = chatInput.value.trim();
 
-        if (!message) return;
-
-        if (message.length > 1000) {
-            addMessage(
-                "Tu mensaje supera el límite de 1000 caracteres.",
-                "bot"
-            );
+        if (!message || isSending) {
             return;
         }
 
-        // Mostrar mensaje del cliente
-        addMessage(message, "user");
-
-        // Limpiar campo
         chatInput.value = "";
 
-        // Consultar Gemini
         sendMessage(message);
-
     });
 
 });
