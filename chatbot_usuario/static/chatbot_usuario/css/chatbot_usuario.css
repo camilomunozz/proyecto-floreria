@@ -13,6 +13,11 @@
 
     font-family: inherit;
     color: var(--chat-text);
+
+    position: relative;
+    width: 0;
+    height: 0;
+    overflow: visible;
 }
 
 /* =========================================
@@ -60,6 +65,10 @@
     overflow: hidden;
     z-index: 9999;
     border: 1px solid #eadde0;
+
+    box-sizing: border-box;
+    max-width: calc(100vw - 20px);
+    min-width: 0;
 }
 
 .flower-chatbot-usuario .chatbot-window[hidden] {
@@ -95,6 +104,7 @@
     align-items: center;
     justify-content: center;
     font-size: 24px;
+    flex-shrink: 0;
 }
 
 .flower-chatbot-usuario .chatbot-header h2 {
@@ -122,8 +132,10 @@
 
 .flower-chatbot-usuario .chatbot-messages {
     flex: 1;
+    min-width: 0;
     padding: 18px 14px;
     overflow-y: auto;
+    overflow-x: hidden;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -136,6 +148,7 @@
     font-size: 13px;
     line-height: 1.5;
     overflow-wrap: anywhere;
+    box-sizing: border-box;
 }
 
 .flower-chatbot-usuario .chatbot-message-bot {
@@ -151,6 +164,135 @@
     border-bottom-right-radius: 4px;
 }
 
+.flower-chatbot-usuario .chatbot-message-loading {
+    font-style: italic;
+    opacity: 0.7;
+}
+
+/* =========================================
+   PRODUCTOS RECOMENDADOS
+========================================= */
+
+.flower-chatbot-usuario .chatbot-products-container {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-sizing: border-box;
+}
+
+.flower-chatbot-usuario .chatbot-products-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--chat-text);
+    margin: 4px 0;
+}
+
+.flower-chatbot-usuario .chatbot-product-card {
+    display: flex;
+    align-items: stretch;
+    gap: 11px;
+    width: 100%;
+    min-width: 0;
+    padding: 10px;
+    background: white;
+    border: 1px solid #eadde0;
+    border-radius: 13px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-sizing: border-box;
+}
+
+.flower-chatbot-usuario .chatbot-product-image-container {
+    width: 95px;
+    min-width: 95px;
+    height: 115px;
+    border-radius: 9px;
+    overflow: hidden;
+    background: #f3e9ec;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    font-size: 10px;
+    color: #777;
+}
+
+.flower-chatbot-usuario .chatbot-product-image {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+}
+
+.flower-chatbot-usuario .chatbot-product-information {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 5px;
+}
+
+.flower-chatbot-usuario .chatbot-product-name {
+    font-size: 13px;
+    line-height: 1.3;
+    font-weight: 700;
+    color: #333;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.flower-chatbot-usuario .chatbot-product-description {
+    font-size: 11px;
+    line-height: 1.4;
+    color: #777;
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.flower-chatbot-usuario .chatbot-product-price {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--chat-primary);
+    margin: 2px 0;
+}
+
+/* =========================================
+   BOTÓN AGREGAR AL CARRITO
+========================================= */
+
+.flower-chatbot-usuario .chatbot-add-cart {
+    width: 100%;
+    min-height: 34px;
+    padding: 7px 9px;
+    border: none;
+    border-radius: 8px;
+    background: var(--chat-primary);
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.flower-chatbot-usuario .chatbot-add-cart:hover:not(:disabled) {
+    background: var(--chat-primary-dark);
+    transform: translateY(-1px);
+}
+
+.flower-chatbot-usuario .chatbot-add-cart:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+}
+
+.flower-chatbot-usuario .chatbot-add-cart:focus-visible {
+    outline: 2px solid var(--chat-pink);
+    outline-offset: 2px;
+}
+
 /* =========================================
    FORMULARIO
 ========================================= */
@@ -162,16 +304,20 @@
     padding: 12px;
     background: white;
     border-top: 1px solid #eee3e5;
+    min-width: 0;
+    box-sizing: border-box;
 }
 
 .flower-chatbot-usuario .chatbot-form input {
     flex: 1;
     min-width: 0;
+    width: 100%;
     padding: 12px 14px;
     border: 1px solid #e5d9dc;
     border-radius: 25px;
     outline: none;
     font-size: 13px;
+    box-sizing: border-box;
 }
 
 .flower-chatbot-usuario .chatbot-form input:focus {
@@ -207,7 +353,7 @@
 }
 
 /* =========================================
-   ADAPTACIÓN MÓVIL
+   RESPONSIVE - TABLETS Y CELULARES
 ========================================= */
 
 @media (max-width: 480px) {
@@ -224,42 +370,55 @@
         bottom: 82px;
         width: calc(100vw - 20px);
         height: min(500px, calc(100vh - 105px));
+        max-height: calc(100vh - 105px);
+    }
+
+    .flower-chatbot-usuario .chatbot-messages {
+        padding: 13px 10px;
+    }
+
+    .flower-chatbot-usuario .chatbot-product-card {
+        gap: 9px;
+        padding: 8px;
+    }
+
+    .flower-chatbot-usuario .chatbot-product-image-container {
+        width: 82px;
+        min-width: 82px;
+        height: 105px;
+    }
+
+    .flower-chatbot-usuario .chatbot-product-name {
+        font-size: 12px;
+    }
+
+    .flower-chatbot-usuario .chatbot-product-price {
+        font-size: 13px;
+    }
+
+    .flower-chatbot-usuario .chatbot-add-cart {
+        font-size: 10px;
     }
 }
 
-
 /* =========================================
-   CONTROL DE DESBORDAMIENTO DEL CHATBOT
+   CELULARES MUY PEQUEÑOS
 ========================================= */
 
-.flower-chatbot-usuario {
-    position: relative;
-    width: 0;
-    height: 0;
-    overflow: visible;
-}
+@media (max-width: 350px) {
 
-.flower-chatbot-usuario .chatbot-toggle,
-.flower-chatbot-usuario .chatbot-window {
-    box-sizing: border-box;
-    max-width: calc(100vw - 20px);
-}
+    .flower-chatbot-usuario .chatbot-product-image-container {
+        width: 70px;
+        min-width: 70px;
+        height: 95px;
+    }
 
-.flower-chatbot-usuario .chatbot-window {
-    min-width: 0;
-}
+    .flower-chatbot-usuario .chatbot-product-card {
+        gap: 7px;
+        padding: 7px;
+    }
 
-.flower-chatbot-usuario .chatbot-messages {
-    min-width: 0;
-    overflow-x: hidden;
-}
-
-.flower-chatbot-usuario .chatbot-form {
-    min-width: 0;
-    box-sizing: border-box;
-}
-
-.flower-chatbot-usuario .chatbot-form input {
-    box-sizing: border-box;
-    width: 100%;
+    .flower-chatbot-usuario .chatbot-product-description {
+        font-size: 10px;
+    }
 }
