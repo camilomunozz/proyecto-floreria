@@ -10,8 +10,8 @@ urlpatterns = [
 
     #catalogo
     path('catalogo/', views.catalogo_productos, name='catalogo_productos'),
-    #barra de busqueda
     path('busqueda/', views.barra_busqueda, name='busqueda'),
+    path('filtros/', views.filtros, name='filtros'),
     #productos
     path('productos/', views.lista_productos, name='lista_productos'),
     path('detalle_producto/<int:id>/', views.detalle_producto, name='detalle_producto'),
