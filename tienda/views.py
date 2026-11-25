@@ -5,11 +5,11 @@ from django.shortcuts import redirect, render, get_object_or_404
 from tienda.decorators import role_required
 from django.contrib.auth.decorators import login_required
 
-from .models import Categoria, Ocasion, Producto
+from .models import Categoria, Ocasion, Producto, Tipo
 
 from .forms import TipoForm, CategoriaForm, OcasionForm, ProductoForm, RegistroForm, EditarPerfilForm
 
-from django.db.models import Q
+from django.db.models import Q, Count
 
 from django.core.paginator import Paginator
 from django.contrib.auth import login
@@ -32,7 +32,8 @@ def barra_busqueda(request):
         return JsonResponse({'coincidencias': []})
 
     #Cargamos los productos y filtros que coincidan con la busqueda.
-    productos = Producto.objects.filter(disponible=True, nombre__icontains=q)[:5]
+    productos = Producto.objects.filter(disponible=True, nombre__icontains=q)[:3]
+    tipos = Tipo.objects.filter(nombre__icontains=q)[:2]
     categorias = Categoria.objects.filter(nombre__icontains=q)[:2]
     ocasiones = Ocasion.objects.filter(nombre__icontains=q)[:2]
 
@@ -46,6 +47,13 @@ def barra_busqueda(request):
             'tipo': 'Producto',
             'texto': prod.nombre,
             'url': reverse('detalle_producto', args=[prod.id])
+        })
+
+    for tip in tipos:
+        coincidencias.append({
+            'tipo': 'Tipo',
+            'texto': tip.nombre,
+            'url': f'{catalogo_url}?tipo={tip.id}'
         })
 
     for cat in categorias:
@@ -62,11 +70,11 @@ def barra_busqueda(request):
             'url': f'{catalogo_url}?ocasion={oca.id}'
         })
 
-    
-
     return JsonResponse({'coincidencias': coincidencias})
 
-    
+#Filtros
+def filtros(request):
+    return render(request, 'catalogo/filtros.html')
 
 #Catalogo de productos
 def catalogo_productos(request):
@@ -74,14 +82,24 @@ def catalogo_productos(request):
     productos = Producto.objects.filter(disponible=True).select_related('categoria','ocasion').order_by('id')
 
     #Cargamos todas las Categorias y Ocasiones.
-    categorias = Categoria.objects.all()
-    ocasiones = Ocasion.objects.all()
+    tipos = Tipo.objects.annotate(
+        total=Count('productos', filter=Q(productos__disponible=True))
+    )
+    categorias = Categoria.objects.annotate(
+        total=Count('productos', filter=Q(productos__disponible=True))
+    )
+    ocasiones = Ocasion.objects.annotate(
+        total=Count('productos', filter=Q(productos__disponible=True))
+    )
 
     #Conseguimos las id de Categoria y Ocasion. Las almacenamos en listas.
+    list_tipos = [int(t) for t in request.GET.getlist('tipo') if t.isdigit()]
     list_categorias = [int(c) for c in request.GET.getlist('categoria') if c.isdigit()]
     list_ocasiones = [int(o) for o in request.GET.getlist('ocasion') if o.isdigit()]
 
     #Filtra productos por categorias y ocasiones seleccionadas.
+    if list_tipos:
+        productos = productos.filter(tipo_id__in=list_tipos)
     if list_categorias:
         productos = productos.filter(categoria_id__in=list_categorias)
     if list_ocasiones:
@@ -100,8 +118,10 @@ def catalogo_productos(request):
         'productos' : pagina_num,
         'pag_num' : pagina_num,
         'querystring': params.urlencode(),
+        'tipos' : tipos,
         'categorias' : categorias,
         'ocasiones' : ocasiones,
+        'list_tipos' : list_tipos,
         'list_categorias' : list_categorias,
         'list_ocasiones' : list_ocasiones,
     }
@@ -263,9 +283,9 @@ def crear_tipo(request):
         form = TipoForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('admin_lista_producto')
+            return redirect('admin_lista_productos')
     else:
-        form = TipoForm(request.POST)
+        form = TipoForm()
     return render(request, 'admin/crear_tipo.html', {'form' : form})
 
 @role_required('admin')

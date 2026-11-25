@@ -3,12 +3,15 @@
     :root {
     --text-dark: #2d3748;  
     --text-gray: #545a66;  
-    --text-lightgray: #898b8d;
+    --dark-bg: #332724;
+    --text-lightgray: #abaeb1;
     --dark-leaf: #2f8344;
     --text-light: #eef1f5;       
     --light-leaf: #7dc262; 
     --unactive-leaf: #9ab98e;   
-    --filter-bg: #e6e6e6;
+    --filter-bg: #eeeded;
+    --alert-btn: #e03e3e;
+    --alert-dark: #992d2d;
     --font-heading: 'Georgia', serif;
     --font-body: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     }
@@ -34,9 +37,18 @@
         }
 
         .flower-boxratio > .flower-tagbox {
+            --tag-gap: clamp(0.4rem, 0.2rem + 1vw, 0.5rem);
+            top: var(--tag-gap);
+            left: var(--tag-gap);
+            right: var(--tag-gap);
             width: auto;
             height: auto;
-            margin: clamp(0.4rem, 0.2rem + 1vw, 1rem);
+            margin: 0;
+
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: clamp(0.25rem, 0.5vw, 0.2rem)
         }
     
         .flower-productbox{
@@ -44,54 +56,262 @@
             border: none;
         }
 
-    
-    .flower-tagbox{
-        max-width: 100%;
-    }
-
     .flower-prodimg{
         min-height: 100% !important;
     }
 
-    .flower-tag{
-        background-color: var(--light-leaf);
-        font-size: clamp(0.5rem, 0.5rem + 0.4vw, 0.6rem);
-        padding: clamp(0.3rem, 0.15rem + 0.4vw, 0.45rem) clamp(0.45rem, 0.3rem + 0.8vw, 0.85rem);
-        border-top-left-radius: clamp(10px, 1vw, 12px);
-        border-top-right-radius: clamp(10px, 1vw, 12px);
-        border-bottom-right-radius: clamp(10px, 1vw, 12px);
-        border-bottom-left-radius: clamp(2px, 0.5vw, 4px);
-        box-shadow: -2px 2px 5px rgba(0, 0, 0, 0.5);
-        display: inline-flex;
-        max-width: clamp(6rem, 2.5rem + 8vw, 8.5rem);
+    /*====== Filtros Head =======*/
+    .filter-box{
+        background-color: #ffffff;
+        margin: 0;
+        padding: 0;
+        height: fit-content;
+        border-radius: clamp(10px, 1vw, 12px);
+        box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.4);
     }
 
-    .flower-tagname{
-        color: var(--text-light);
-        display: block;
+    .filter-head{
+        --margin-sz: clamp(0.6rem, 0.4rem + 0.3vw, 1.5rem);
+        --icon-sz: clamp(1rem, 0.4rem + 0.8vw, 1.5rem);
+        
+        margin-bottom: calc(var(--margin-sz)*1.5);
+        padding-bottom: calc(var(--margin-sz)*1.5);
+        padding-top: calc(var(--margin-sz)*1.5);
+        border-top-right-radius: clamp(10px, 1vw, 12px);
+        border-top-left-radius: clamp(10px, 1vw, 12px);
+        
+        box-shadow: 0px 5px 12px rgba(0, 0, 0, 0.4);
+        background-color: var(--dark-bg);
         overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
     }
+    
+    .filter-head i{
+        padding: 0;
+        color: var(--text-light);
+        padding-right: calc(var(--margin-sz)*0.9);
+        font-size: var(--icon-sz);
+    }
+
+    .filter-head span{
+        color: var(--text-light);
+        font-size: calc(var(--icon-sz)*0.9);
+        font-weight: 500;
+
+        margin-left: var(--margin-sz);
+
+        width: fit-content;
+        padding-left: 0.8rem;
+        padding-right: 0.8rem;
+        border-radius: 30px;
+    }
+
+    .btn-clear{
+        width: calc(var(--icon-sz)*2);
+        height: calc(var(--icon-sz)*2);
+        border-radius: calc(var(--icon-sz)*0.5);
+        background-color: var(--alert-btn);
+        margin-right: var(--margin-sz);
+        
+        text-align: center;
+        align-items: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.3);
+        transition: background-color 0.6s ease;
+    }
+
+    .btn-clear i{
+        padding: 0;
+        font-size: calc(var(--icon-sz)*0.95);
+        color: var(--text-light);
+        text-decoration: none;
+    }
+
+    .btn-clear:not(#clear-inactive):hover{
+        background-color: var(--alert-dark);
+    }
+
+    #clear-inactive{
+        opacity: 0.4;
+    }
+    /*************************************************************/
+
+    /*====== Filtros Item =======*/
+    .filter-item{
+        --margin-sz: clamp(0.6rem, 0.4rem + 0.3vw, 1.5rem);
+
+        border: solid 1px rgb(212, 212, 212);
+        margin-left: var(--margin-sz);
+        margin-right: var(--margin-sz);
+        margin-bottom: var(--margin-sz);
+
+        width: calc(100% - (var(--margin-sz)*2));
+        border-radius: 12px;
+
+        display: flex;
+        flex-direction: column;
+        justify-content: start;
+        align-items: center;
+    }
+
+    .filter-item-title{
+        --margin-sz: clamp(0.6rem, 0.4rem + 0.3vw, 1.5rem);
+        --icon-sz: clamp(1rem, 0.4rem + 0.8vw, 1.5rem);
+
+        border: none;
+        background-color: var(--dark-bg);
+        border-radius: 12px;
+        min-width: 100%;
+        padding-left: 0.8rem;
+        padding-right: 0.8rem;
+        padding-top: 0.65rem;
+        padding-bottom: 0.65rem;
+        margin: 0;
+        line-height: 1;
+
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: border-radius 0.5s ease;
+    }
+
+    .filter-item-title i, svg{
+        height: var(--icon-sz);
+        width: var(--icon-sz);
+        font-size: var(--icon-sz);
+        color: var(--text-light);
+        fill: var(--text-light);
+    }
+
+    .filter-item-title span{
+        margin-left: var(--margin-sz);
+        font-size: calc(var(--icon-sz)*0.8);
+        font-weight: 500;
+        color: var(--text-light);
+    }
+
+    .filter-item-title .bi-caret-down-fill {
+        transition: transform 0.25s ease;
+    }
+
+    .filter-item-title:not(.collapsed) .bi-caret-down-fill {
+        transform: rotate(180deg);
+    }
+
+    .filter-item-title:not(.collapsed){
+        border-bottom-left-radius: 0px;
+        border-bottom-right-radius: 0px;
+    }
+    /*************************************************************/
+
+    /*====== Filtros Item =======*/
+    .filter-item-box {
+        --margin-sz: clamp(0.6rem, 0.4rem + 0.3vw, 1.5rem);
+        --item-sz: clamp(0.8rem, 0.4rem + 0.8vw, 1rem);
+
+        width: 100%;
+        padding-left: var(--margin-sz);
+        padding-right: var(--margin-sz);
+        padding-top: var(--margin-sz);
+        padding-bottom: var(--margin-sz);
+
+        /*border-top: solid 1px rgb(212, 212, 212);*/
+    }
+
+    .filter-items{
+        margin-top: calc(var(--margin-sz)*0.3);
+        margin-bottom: calc(var(--margin-sz)*0.3);
+    }
+
+    .filter-items label{
+        font-size: calc(var(--item-sz)*0.9) !important;
+        font-weight: 500;
+    }
+
+    .filter-items #tagback{
+        width: 1.5rem;
+        height: 1.1rem;
+        display: inline-block;
+        line-height: 1;
+        border-radius: calc(var(--item-sz)*0.2);
+        background-color: var(--text-lightgray);
+        align-items: center;
+        text-align: center;
+        margin-left: calc(var(--margin-sz)*0.6);
+    }
+
+    .filter-items #tagnumber{
+        font-size: calc(var(--item-sz)*0.75) !important;
+        font-weight: bold;
+        color: var(--text-light);
+        
+
+        /*padding-top: calc(var(--item-sz)*0.2);
+        padding-bottom: calc(var(--item-sz)*0.2);
+        padding-left: calc(var(--item-sz)*0.5);
+        padding-right: calc(var(--item-sz)*0.5);*/
+    }
+    /*************************************************************/
+
+    /*====== Etiquetas ======*/
+    .flower-tag{
+        display: inline-flex;
+        position: relative;
+        align-items: center;
+        box-sizing: border-box;
+
+        --tag-size: clamp(1.6rem, 1.3rem + 1vw, 1.8rem);
+        --tag-icon: calc(var(--tag-size)*0.5);
+
+        min-height: var(--tag-size);
+        min-width: var(--tag-size);
+        padding: 0;
+        padding-left: var(--tag-size);
+        
+        border-radius: calc(var(--tag-size)/2);
+        background-color: var(--light-leaf);
+        font-size: clamp(0.5rem, 0.5rem + 0.4vw, 0.7rem);
+        font-weight:bold;
+        box-shadow: 1px 2px 5px rgba(0, 0, 0, 0.5);
+        line-height: 1;    
+        transition: padding-right 0.4s ease, border-radius 0.4s ease;
+    }
+
+    .flower-tag .flower-tagicon{
+        position: absolute;
+        left: calc((var(--tag-size) - var(--tag-icon)) / 2);
+        top: calc((var(--tag-size) - var(--tag-icon)) / 2);
+        width: var(--tag-icon);
+        height: var(--tag-icon);
+        font-size: var(--tag-icon);       
+        line-height: 1;
+        pointer-events: none;
+        color: #ffffff
+    }
+    /*************************************************************/
 
     .flower-cartbtn * {
         color: var(--text-light);
         background-color: var(--light-leaf);
     }
-
-    .flower-productname{
+    
+    .flower-productbox .flower-productname{
         --name-size: clamp(0.8rem, 0.8rem + 0.5vw, 1rem);
         --name-lines: 2;
-        --name-lh: 1.2;
 
         font-size: var(--name-size);
-        line-height: var(--name-lh);
-        height: calc(var(--name-size) * var(--name-lh) * var(--name-lines));
+        line-height: 1.2;
+        height: calc(var(--name-size) * 1.27 * var(--name-lines));
 
-        display: flex;
-        align-items: center;
-        justify-content: center;
         overflow: hidden;
+        overflow-wrap: anywhere;
+        text-align: center;
+        margin-bottom: 0.5rem;
     }
 
     .flower-pricetext{
@@ -116,13 +336,6 @@
 
     .flower-check{
         display: none;
-    }
-
-    #categoriabox, #ocasionbox{
-        background-color: var(--filter-bg);
-        border-radius: clamp(10px, 1vw, 12px);
-        box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.5);
-        padding: 5px;
     }
 
     .flower-sidetag{
@@ -173,6 +386,7 @@
             border-radius: 30px;
             box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.5);
         }
+    /* Fix text */
 
     /* search error */
 
@@ -194,17 +408,17 @@
     /* no product */
 
         .noproduct-box{
-            background-color: var(--filter-bg);
+            background-color: #ffffff;
             border-radius: clamp(10px, 1vw, 12px);
             text-align: center;
             width: clamp(22rem, 8rem + 20vw, 30rem);
-            box-shadow: 0px 1px 5px rgba(0, 0, 0, 0.5);
+            box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.5);
         }
 
         .noproduct-icon{
             margin-top: clamp(0.4rem, 0.2rem + 0.4vw, 0.9rem);
             font-size: clamp(5.5rem, 2.5rem + 4vw, 8rem);
-            color: var(--filter-bg);
+            color: #ffffff;
         }
 
         .noproduct-circle{
@@ -301,15 +515,44 @@
         }
 
         .flower-pageitem a:focus{
-            background-color: var(--text-gray) !important;
+            background-color: var(--text-lightgray) !important;
             color: #ffffff !important;
         }
 
 
 
 /*== ANIMACIONES ==*/
+    /*== Etiquetas ==*/
+    .flower-tag .flower-tagname {
+        color: var(--text-light);
+        display: block;
+        max-width: 0;
+        margin-left: 0;
+        opacity: 0;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+        transition: max-width 0.85s ease, margin-left 0.4s ease, opacity 0.2s ease;
+    }
 
-    /*== Animación sobrepuesta ==*/
+    .flower-tag:hover{
+        border-bottom-right-radius: clamp(2px, 0.5vw, 4px);
+        padding-right: calc(var(--tag-size) * 0.4);
+    }
+    
+    .flower-tag:hover .flower-tagname {
+        max-width: 20rem;                       
+        opacity: 1;
+    }
+
+        /* etiquetas movile */
+        @media (hover: none){
+            .flower-tag{
+                display: none;
+            }
+        }
+
+    /*== Animación boton 'Agregar al carrito' ==*/
         .flower-cartbtn{
             opacity: 0;
             transform: translateY(100%);
