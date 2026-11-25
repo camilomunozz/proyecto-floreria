@@ -8,24 +8,13 @@
             <h2 class="h3 fw-bold text-dark mb-0">Gestión de Productos</h2>
             <p class="text-muted small mb-0">Administración de inventario y catálogo</p>
         </div>
-        <div class="d-flex gap-2">
-            <a href="{% url 'crear_categoria' %}" class="btn btn-outline-secondary btn-sm">
-                + Categoría
-            </a>
-            <a href="{% url 'crear_ocasion' %}" class="btn btn-outline-secondary btn-sm">
-                + Ocasión
-            </a>
-            <a href="{% url 'crear_producto' %}" class="btn btn-success btn-sm px-3">
-                <i class=""></i> + Producto
-            </a>
-        </div>
     </div>
 
     <!-- Buscador y Filtros con HTMX -->
     <form id="search-form" method="GET" action="{% url 'admin_lista_productos' %}" class="row g-2 mb-4">
 
         <!-- Input de Búsqueda con HTMX -->
-        <div class="col-md-4">
+        <div class="col-6">
             <div class="input-group">
                 <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
                 <input type="text" id="search-input" name="q" value="{{ query }}" class="form-control"
@@ -36,7 +25,7 @@
         </div>
 
         <!-- Filtro de Categoría con HTMX -->
-        <div class="col-md-3">
+        <div class="col-3">
             <select name="categoria" class="form-select" hx-get="{% url 'admin_lista_productos' %}"
                 hx-target="#productos-tbody" hx-include="#search-input" hx-trigger="change">
                 <option value="">Todas las categorías</option>
@@ -55,6 +44,21 @@
         </div>
         {% endif %}
     </form>
+
+        <div class="d-flex justify-content-end gap-2 mb-3">
+            <a href="{% url 'crear_tipo' %}" class="btn btn-outline-secondary btn-sm">
+                + Tipo
+            </a>
+            <a href="{% url 'crear_categoria' %}" class="btn btn-outline-secondary btn-sm">
+                + Categoría
+            </a>
+            <a href="{% url 'crear_ocasion' %}" class="btn btn-outline-secondary btn-sm">
+                + Ocasión
+            </a>
+            <a href="{% url 'crear_producto' %}" class="btn btn-success btn-sm px-3">
+                <i class=""></i> + Producto
+            </a>
+        </div>
 
 
     <!-- Tabla de Productos -->
