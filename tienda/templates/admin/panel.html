@@ -1,0 +1,518 @@
+{% extends 'admin/base_admin.html' %}
+{% load static humanize %}
+
+{% block content %}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'CSS/panel_admin/panel.css' %}">
+
+<div class="panel-ventas">
+
+
+
+<div class="top">
+    <h1>Panel de ventas</h1>
+
+    <div class="acciones-panel">
+
+        <div class="filtros">
+            {% for valor, texto in opciones %}
+                <a class="chip {% if valor == rango %}on{% endif %}"
+                   href="?dias={{ valor }}{% if ocasion_sel %}&ocasion={{ ocasion_sel|urlencode }}{% endif %}">
+                    {{ texto }}
+                </a>
+            {% endfor %}
+        </div>
+
+        <a
+    href="{% url 'exportar_reporte_pdf' %}?dias={{ rango }}{% if desde %}&desde={{ desde }}{% endif %}{% if hasta %}&hasta={{ hasta }}{% endif %}{% if ocasion_sel %}&ocasion={{ ocasion_sel|urlencode }}{% endif %}"
+    class="btn-pdf"
+>
+    <i class="bi bi-file-earmark-pdf"></i>
+    Descargar reporte PDF
+</a>
+
+    </div>
+</div>
+
+<form class="rango" method="get">
+    <span>Rango personalizado:</span>
+
+    <input type="date" name="desde" value="{{ desde }}" required>
+    <input type="date" name="hasta" value="{{ hasta }}" required>
+
+    {% if ocasion_sel %}
+        <input type="hidden" name="ocasion" value="{{ ocasion_sel }}">
+    {% endif %}
+
+    <button type="submit">Aplicar</button>
+
+    <span class="fecha-info">
+        Mostrando del {{ desde }} al {{ hasta }}
+    </span>
+</form>
+
+    {% if pedidos == 0 %}
+        <div class="vacio">
+            No hay pedidos pagados en este periodo.
+        </div>
+    {% endif %}
+
+    <!-- INDICADORES -->
+    <div class="kpis">
+
+        <div class="card kpi">
+            <span>Ingresos</span>
+            <b>${{ ingresos|floatformat:0|intcomma }}</b>
+            {% if var_ingresos is not None %}
+                <small class="{% if var_ingresos >= 0 %}up{% else %}down{% endif %}">
+                    {{ var_ingresos }}% vs periodo anterior
+                </small>
+            {% endif %}
+        </div>
+
+        <div class="card kpi">
+            <span>Pedidos pagados</span>
+            <b>{{ pedidos }}</b>
+            {% if var_pedidos is not None %}
+                <small class="{% if var_pedidos >= 0 %}up{% else %}down{% endif %}">
+                    {{ var_pedidos }}% vs periodo anterior
+                </small>
+            {% endif %}
+        </div>
+
+        <div class="card kpi">
+            <span>Ticket promedio</span>
+            <b>${{ ticket|floatformat:0|intcomma }}</b>
+        </div>
+
+        <div class="card kpi">
+            <span>Unidades vendidas</span>
+            <b>{{ unidades }}</b>
+        </div>
+
+        <div class="card kpi">
+            <span>Ingresos por envío</span>
+            <b>${{ envios|floatformat:0|intcomma }}</b>
+        </div>
+
+        <div class="card kpi">
+            <span>Tasa de órdenes pagadas</span>
+            <b>{{ conversion }}%</b>
+            <small>{{ sin_pagar }} sin pagar</small>
+        </div>
+
+        <div class="card kpi">
+            <span>Por preparar</span>
+            <b>{{ por_preparar }}</b>
+        </div>
+
+        <div class="card kpi">
+            <span>En camino</span>
+            <b>{{ en_camino }}</b>
+        </div>
+
+        <div class="card kpi">
+            <span>Entregas hoy</span>
+            <b>{{ entregas_hoy }}</b>
+        </div>
+
+    </div>
+
+    <!-- GRÁFICOS -->
+    <div class="grid">
+
+        <div class="card ancho">
+            <h3>Ingresos y pedidos por día</h3>
+            <div class="chart"><canvas id="gDias"></canvas></div>
+        </div>
+
+        <div class="card">
+            <h3>Pedidos por día de la semana</h3>
+            <div class="chart"><canvas id="gSemana"></canvas></div>
+        </div>
+
+        <div class="card">
+            <h3>Estado de envío</h3>
+            <div class="chart"><canvas id="gEstados"></canvas></div>
+        </div>
+
+        <div class="card">
+            <h3>Pagados vs sin pagar</h3>
+            <div class="chart"><canvas id="gConv"></canvas></div>
+        </div>
+
+        <div class="card">
+            <h3>Productos más vendidos (unidades)</h3>
+            <div class="chart"><canvas id="gProd"></canvas></div>
+        </div>
+
+        <div class="card">
+            <h3>Ingresos por producto</h3>
+            <div class="chart"><canvas id="gProdIng"></canvas></div>
+        </div>
+
+        <div class="card">
+            <h3>Pedidos por comuna</h3>
+            <div class="chart"><canvas id="gCom"></canvas></div>
+        </div>
+
+        <div class="card">
+            <h3>Ingresos por comuna</h3>
+            <div class="chart"><canvas id="gComIng"></canvas></div>
+        </div>
+
+        <div class="card">
+            <h3>Entregas de los próximos 14 días</h3>
+            <div class="chart"><canvas id="gCarga"></canvas></div>
+        </div>
+
+        <div class="card">
+            <h3>Ventas por categoría (unidades)</h3>
+            <div class="chart"><canvas id="gCat"></canvas></div>
+        </div>
+
+        <div class="card">
+            <h3>Ingresos por categoría</h3>
+            <div class="chart"><canvas id="gCatIng"></canvas></div>
+        </div>
+
+        <div class="card">
+            <h3>Ventas por ocasión (unidades)</h3>
+            <div class="chart"><canvas id="gOca"></canvas></div>
+        </div>
+
+        <div class="card">
+            <h3>Ingresos por ocasión</h3>
+            <div class="chart"><canvas id="gOcaIng"></canvas></div>
+        </div>
+
+        <div class="card">
+            <h3>Ventas por tipo (unidades)</h3>
+            <div class="chart"><canvas id="gTipo"></canvas></div>
+        </div>
+
+    </div>
+
+    <!-- MATRIZ CATEGORÍAS Y OCASIONES -->
+    <div class="grid">
+
+        <div class="card ancho tabla-scroll">
+            <h3>Qué categorías se venden en cada ocasión (unidades)</h3>
+
+            {% if mapa %}
+                <table>
+                    <tr>
+                        <th>Categoría</th>
+                        {% for o in ocasiones_cols %}
+                            <th class="centrado">{{ o }}</th>
+                        {% endfor %}
+                    </tr>
+
+                    {% for fila in mapa %}
+                        <tr>
+                            <td><b>{{ fila.categoria }}</b></td>
+
+                            {% for c in fila.celdas %}
+                                <td class="centrado calor-{{ c.nivel }}">
+                                    {% if c.valor %}{{ c.valor }}{% endif %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                </table>
+            {% else %}
+                <p>Sin ventas en este periodo.</p>
+            {% endif %}
+        </div>
+
+        <!-- PRODUCTOS POR OCASIÓN -->
+        <div class="card ancho">
+            <h3>Productos más vendidos por ocasión</h3>
+
+            <form method="get" class="filtro-ocasion">
+
+                {% if rango == "personalizado" %}
+                    <input type="hidden" name="desde" value="{{ desde }}">
+                    <input type="hidden" name="hasta" value="{{ hasta }}">
+                {% else %}
+                    <input type="hidden" name="dias" value="{{ rango }}">
+                {% endif %}
+
+                <select name="ocasion" onchange="this.form.submit()">
+                    <option value="">Todas las ocasiones</option>
+
+                    {% for o in opciones_ocasion %}
+                        <option value="{{ o }}"
+                            {% if o == ocasion_sel %}selected{% endif %}>
+                            {{ o }}
+                        </option>
+                    {% endfor %}
+                </select>
+
+            </form>
+
+            <div class="tabla-scroll">
+                <table>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Categoría</th>
+                        <th>Unidades</th>
+                        <th>Ingresos</th>
+                    </tr>
+
+                    {% for p in top_por_ocasion %}
+                        <tr>
+                            <td>{{ p.producto_nombre }}</td>
+                            <td>{{ p.categoria_nombre|default:"Sin clasificar" }}</td>
+                            <td>{{ p.unidades }}</td>
+                            <td>${{ p.ingresos|floatformat:0|intcomma }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4">Sin ventas para esta selección.</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- DETALLES Y PRÓXIMAS ENTREGAS -->
+    <div class="grid">
+
+        <div class="card">
+            <h3>Detalle de productos</h3>
+
+            <div class="tabla-scroll">
+                <table>
+                    <tr>
+                        <th>Producto</th>
+                        <th>Unidades</th>
+                        <th>Ingresos</th>
+                    </tr>
+
+                    {% for p in top_productos %}
+                        <tr>
+                            <td>{{ p.producto_nombre }}</td>
+                            <td>{{ p.unidades }}</td>
+                            <td>${{ p.ingresos|floatformat:0|intcomma }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="3">Sin ventas en este periodo.</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>Próximas entregas</h3>
+
+            <div class="tabla-scroll">
+                <table>
+                    <tr>
+                        <th>Orden</th>
+                        <th>Fecha</th>
+                        <th>Comuna</th>
+                        <th>Estado</th>
+                    </tr>
+
+                    {% for o in proximas %}
+                        <tr>
+                            <td>#{{ o.id }}</td>
+                            <td>{{ o.fecha_entrega|date:"d/m/Y" }}</td>
+                            <td>{{ o.comuna }}</td>
+                            <td>{{ o.get_estado_envio_display }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4">No hay entregas programadas.</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+{{ datos|json_script:"datos" }}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+<script>
+(function () {
+    function iniciar() {
+        const d = JSON.parse(document.getElementById("datos").textContent);
+
+        // ---- Colores: uno distinto por gráfico ----
+        const C = {
+            linea: "#2563eb",            // ingresos por día (línea)
+            lineaRelleno: "rgba(37, 99, 235, 0.15)",
+            pedidosDia: "#f59e0b",       // pedidos por día
+            semana: "#7c3aed",           // pedidos por día de la semana
+            productos: "#059669",        // productos (unidades)
+            productosIng: "#0891b2",     // productos (ingresos)
+            comunas: "#db2777",          // comunas (pedidos)
+            comunasIng: "#ea580c",       // comunas (ingresos)
+            carga: "#65a30d",            // entregas próximos 14 días
+            categoriasIng: "#dc2626",    // categorías (ingresos)
+            ocasionesIng: "#4f46e5"      // ocasiones (ingresos)
+        };
+
+        // Gráficos circulares: cada uno con su propia paleta
+        const ESTADOS = {
+            "Pendiente de preparación": "#f59e0b",
+            "En camino a destino": "#2563eb",
+            "Entregado": "#16a34a"
+        };
+        const PALETAS = {
+            categorias: ["#2563eb", "#f59e0b", "#10b981", "#ef4444", "#8b5cf6", "#06b6d4", "#ec4899", "#84cc16", "#f97316", "#6366f1"],
+            ocasiones:  ["#ec4899", "#8b5cf6", "#06b6d4", "#f97316", "#10b981", "#ef4444", "#2563eb", "#eab308", "#14b8a6", "#a855f7"],
+            tipos:      ["#f97316", "#10b981", "#2563eb", "#ec4899", "#8b5cf6", "#eab308"],
+            conversion: ["#16a34a", "#dc2626"]   // pagados / sin pagar
+        };
+
+        // ---- Tipografía y texto de los gráficos ----
+        const css = getComputedStyle(document.querySelector(".panel-ventas"));
+        const fuente = css.getPropertyValue("--fuente-cuerpo").trim() || '"Poppins", "Segoe UI", sans-serif';
+        Chart.defaults.font.family = fuente;
+        Chart.defaults.font.size = 12;
+        Chart.defaults.color = "#1f2937";
+        Chart.defaults.plugins.legend.labels.usePointStyle = true;
+
+        const fmt = n => new Intl.NumberFormat("es-CL").format(n);
+        const dinero = x => new Intl.NumberFormat("es-CL", {
+            style: "currency",
+            currency: "CLP",
+            maximumFractionDigits: 0
+        }).format(x);
+
+        Chart.defaults.plugins.tooltip.callbacks.label = c => {
+            const esDinero = (c.dataset.label || "").includes("Ingresos");
+            return `${c.dataset.label || c.label}: ${esDinero ? dinero(c.raw) : fmt(c.raw)}`;
+        };
+
+        const barra = (id, labels, label, data, color, extra = {}) =>
+            new Chart(document.getElementById(id), {
+                type: "bar",
+                data: {
+                    labels,
+                    datasets: [{ label, data, backgroundColor: color, borderRadius: 4, maxBarThickness: 56 }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    ...extra
+                }
+            });
+
+        const dona = (id, labels, label, data, colores) =>
+            new Chart(document.getElementById(id), {
+                type: "doughnut",
+                data: {
+                    labels,
+                    datasets: [{ label, data, backgroundColor: colores, borderColor: "#fff", borderWidth: 2 }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: "bottom" } }
+                }
+            });
+
+        // Ingresos (línea) y pedidos (barras) por día
+        new Chart(document.getElementById("gDias"), {
+            type: "bar",
+            data: {
+                labels: d.dias.labels,
+                datasets: [
+                    {
+                        type: "line",
+                        label: "Ingresos ($)",
+                        data: d.dias.ingresos,
+                        borderColor: C.linea,
+                        backgroundColor: C.lineaRelleno,
+                        pointBackgroundColor: C.linea,
+                        pointRadius: 2,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: .3,
+                        yAxisID: "y"
+                    },
+                    {
+                        type: "bar",
+                        label: "Pedidos",
+                        data: d.dias.pedidos,
+                        backgroundColor: C.pedidosDia,
+                        borderRadius: 4,
+                        maxBarThickness: 28,
+                        yAxisID: "y1"
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: "index", intersect: false },
+                scales: {
+                    y: { ticks: { callback: dinero } },
+                    y1: {
+                        position: "right",
+                        grid: { drawOnChartArea: false },
+                        ticks: { precision: 0 }
+                    }
+                }
+            }
+        });
+
+        barra("gSemana", d.semana.labels, "Pedidos", d.semana.pedidos, C.semana,
+            { scales: { y: { ticks: { precision: 0 } } } });
+
+        dona("gEstados", d.estados.labels, "Pedidos", d.estados.valores,
+            d.estados.labels.map((l, i) => ESTADOS[l] || PALETAS.categorias[i % 10]));
+        dona("gConv", d.conversion.labels, "Pedidos", d.conversion.valores, PALETAS.conversion);
+
+        barra("gProd", d.productos.labels, "Unidades", d.productos.unidades, C.productos,
+            { indexAxis: "y", scales: { x: { ticks: { precision: 0 } } } });
+        barra("gProdIng", d.productos.labels, "Ingresos ($)", d.productos.ingresos, C.productosIng,
+            { indexAxis: "y", scales: { x: { ticks: { callback: dinero } } } });
+
+        barra("gCom", d.comunas.labels, "Pedidos", d.comunas.pedidos, C.comunas,
+            { scales: { y: { ticks: { precision: 0 } } } });
+        barra("gComIng", d.comunas.labels, "Ingresos ($)", d.comunas.ingresos, C.comunasIng,
+            { scales: { y: { ticks: { callback: dinero } } } });
+
+        barra("gCarga", d.carga.labels, "Entregas", d.carga.valores, C.carga,
+            { scales: { y: { ticks: { precision: 0 } } } });
+
+        dona("gCat", d.categorias.labels, "Unidades", d.categorias.unidades, PALETAS.categorias);
+        barra("gCatIng", d.categorias.labels, "Ingresos ($)", d.categorias.ingresos, C.categoriasIng,
+            { scales: { y: { ticks: { callback: dinero } } } });
+
+        dona("gOca", d.ocasiones.labels, "Unidades", d.ocasiones.unidades, PALETAS.ocasiones);
+        barra("gOcaIng", d.ocasiones.labels, "Ingresos ($)", d.ocasiones.ingresos, C.ocasionesIng,
+            { scales: { y: { ticks: { callback: dinero } } } });
+
+        dona("gTipo", d.tipos.labels, "Unidades", d.tipos.unidades, PALETAS.tipos);
+    }
+
+    // Espera a Poppins (máximo 1,5 s) antes de dibujar los gráficos
+    const fuentes = Promise.all([
+        document.fonts.load("400 13px Poppins"),
+        document.fonts.load("600 13px Poppins")
+    ]);
+    const limite = new Promise(r => setTimeout(r, 1500));
+
+    Promise.race([fuentes, limite]).then(iniciar, iniciar);
+})();
+</script>
+
+{% endblock %}
+

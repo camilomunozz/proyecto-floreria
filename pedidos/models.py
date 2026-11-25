@@ -128,6 +128,9 @@ class ItemOrden(models.Model):
     producto_nombre = models.CharField(max_length=255)
     precio_unitario = models.DecimalField(max_digits=10, decimal_places=0, null=True, blank=True)
     cantidad = models.PositiveIntegerField(default=1, null=True, blank=True)
+    categoria_nombre = models.CharField(max_length=100, blank=True, default="")
+    ocasion_nombre = models.CharField(max_length=100, blank=True, default="")
+    tipo_nombre = models.CharField(max_length=100, blank=True, default="")
 
     def __str__(self):
         return f"{self.cantidad}x {self.producto_nombre} (Orden #{self.orden.id})"

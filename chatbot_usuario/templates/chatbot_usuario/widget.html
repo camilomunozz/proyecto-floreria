@@ -1,0 +1,95 @@
+
+{% load static %}
+
+<div id="flower-chatbot" class="flower-chatbot-usuario">
+
+    <!-- Botón flotante -->
+    <button
+        id="chatbot-toggle"
+        class="chatbot-toggle"
+        type="button"
+        aria-label="Abrir asistente virtual"
+        aria-expanded="false"
+    >
+        <span class="chatbot-toggle-icon">✿</span>
+    </button>
+
+    <!-- Ventana del chat -->
+    <section
+        id="chatbot-window"
+        class="chatbot-window"
+        aria-label="Asistente virtual FlowerView"
+        hidden
+    >
+        <header class="chatbot-header">
+            <div class="chatbot-header-info">
+                <div>
+                    <h2>Asistente FlowerView</h2>
+                    <span>Estamos aquí para ayudarte</span>
+                </div>
+            </div>
+
+            <button
+                id="chatbot-close"
+                class="chatbot-close"
+                type="button"
+                aria-label="Cerrar chat"
+            >
+                ×
+            </button>
+        </header>
+
+        <div
+            id="chatbot-messages"
+            class="chatbot-messages"
+            aria-live="polite"
+            aria-label="Conversación"
+        >
+            <div class="chatbot-message chatbot-message-bot">
+                ¡Hola! 🌷 Soy el asistente virtual de FlowerView.
+                Puedo ayudarte a encontrar arreglos florales según
+                tus gustos, ocasión y presupuesto.
+                ¿Qué estás buscando?
+            </div>
+        </div>
+
+        <form id="chatbot-form" class="chatbot-form">
+            {% csrf_token %}
+
+            <input
+                id="chatbot-input"
+                type="text"
+                placeholder="Escribe tu mensaje..."
+                maxlength="1000"
+                autocomplete="off"
+                aria-label="Escribe tu mensaje"
+                required
+            >
+
+            <button
+                type="submit"
+                id="chatbot-send"
+                aria-label="Enviar mensaje"
+            >
+                ➤
+            </button>
+        </form>
+
+        <footer class="chatbot-footer">
+            Asistente virtual FlowerView
+        </footer>
+    </section>
+
+</div>
+
+<!-- CSS del chatbot -->
+<link
+    rel="stylesheet"
+    href="{% static 'chatbot_usuario/css/chatbot_usuario.css' %}"
+>
+
+<!-- JavaScript del chatbot -->
+<script
+    src="{% static 'chatbot_usuario/js/chatbot_usuario.js' %}"
+    defer
+></script>

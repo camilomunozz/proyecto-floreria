@@ -26,8 +26,7 @@ urlpatterns = [
     path('carrito/', include('carrito.urls')),
     path("__reload__/", include("django_browser_reload.urls")),
     path('pedidos/', include('pedidos.urls')),
+    path('chatbot/', include('chatbot_usuario.urls')),
 
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,0 +1,403 @@
+/* ==========================================================================
+   Panel de ventas · Florería
+   Ubicación: tienda/static/CSS/panel_admin/panel.css
+
+   Tipografía: Poppins (se carga desde Google Fonts en panel.html).
+   Interfaz sobria: textos negros y superficies neutras. Los colores de los
+   gráficos viven en el script de panel.html (uno distinto por gráfico).
+   ========================================================================== */
+
+.panel-ventas {
+    /* Tipografía */
+    --fuente-titulo: "Poppins", "Segoe UI", Tahoma, sans-serif;
+    --fuente-cuerpo: "Poppins", "Segoe UI", Tahoma, sans-serif;
+
+    /* Interfaz sobria: texto negro y superficies neutras */
+    --principal: #2563eb;
+    --principal-suave: rgba(37, 99, 235, 0.15);
+    --oscuro: #111111;
+    --acento: #f59e0b;
+    --suave: #f6f7f9;
+    --linea: #e5e7eb;
+    --borde: #d1d5db;
+    --aviso-fondo: #fffbeb;
+    --aviso-borde: #fde68a;
+
+    /* Texto y semáforo */
+    --texto: #1f2937;
+    --apagado: #4b5563;
+    --subida: #15803d;
+    --bajada: #b91c1c;
+
+    max-width: 1400px;
+    margin-inline: auto;
+    color: var(--texto);
+    font-family: var(--fuente-cuerpo);
+}
+
+/* ---------- Encabezado y filtros ---------- */
+
+.panel-ventas .top {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 0.75rem 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.panel-ventas h1 {
+    margin: 0;
+    font-family: var(--fuente-titulo);
+    font-size: 1.6rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--oscuro);
+}
+
+/* Selector de periodo: un solo control con segmentos */
+.panel-ventas .filtros {
+    display: inline-flex;
+    max-width: 100%;
+    overflow-x: auto;
+    background: #fff;
+    border: 1px solid var(--borde);
+    border-radius: 8px;
+}
+
+.panel-ventas .chip {
+    padding: 0.45rem 0.95rem;
+    color: var(--oscuro);
+    font-family: var(--fuente-cuerpo);
+    font-size: 0.88rem;
+    white-space: nowrap;
+    text-decoration: none;
+    border-right: 1px solid var(--linea);
+    transition: background-color 0.15s ease;
+}
+
+.panel-ventas .chip:last-child {
+    border-right: 0;
+}
+
+.panel-ventas .chip:hover:not(.on) {
+    background: var(--suave);
+    color: var(--oscuro);
+}
+
+.panel-ventas .chip.on,
+.panel-ventas .chip.on:hover {
+    background: var(--oscuro);
+    color: #fff;
+}
+
+/* Rango personalizado */
+.panel-ventas form.rango {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+    color: var(--texto);
+}
+
+.panel-ventas input[type="date"],
+.panel-ventas select {
+    padding: 0.35rem 0.55rem;
+    font: inherit;
+    color: var(--texto);
+    background: #fff;
+    border: 1px solid var(--borde);
+    border-radius: 6px;
+}
+
+.panel-ventas form.rango button {
+    padding: 0.4rem 0.95rem;
+    font: inherit;
+    color: #fff;
+    background: var(--oscuro);
+    border: 0;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.panel-ventas form.rango button:hover {
+    background: color-mix(in srgb, var(--oscuro) 85%, #000);
+}
+
+.panel-ventas .fecha-info {
+    margin-left: auto;
+}
+
+.panel-ventas .filtro-ocasion {
+    margin-bottom: 0.75rem;
+}
+
+.panel-ventas .filtro-ocasion select {
+    min-width: 14rem;
+}
+
+/* Aviso de periodo sin ventas */
+.panel-ventas .vacio {
+    margin-bottom: 1rem;
+    padding: 0.7rem 1rem;
+    color: var(--oscuro);
+    background: var(--aviso-fondo);
+    border: 1px solid var(--aviso-borde);
+    border-left: 4px solid var(--acento);
+    border-radius: 6px;
+}
+
+/* ---------- Tarjetas base ---------- */
+
+.panel-ventas .card {
+    display: block;
+    min-width: 0;
+    padding: 1rem 1.1rem;
+    background: #fff;
+    border: 1px solid var(--linea);
+    border-radius: 6px;
+    box-shadow: none;
+}
+
+.panel-ventas h3 {
+    margin: 0 0 0.75rem;
+    font-family: var(--fuente-titulo);
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--oscuro);
+}
+
+/* ---------- Indicadores: una sola franja ---------- */
+
+.panel-ventas .kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 1px;                       /* el fondo asoma como divisor */
+    margin-bottom: 1rem;
+    background: var(--linea);
+    border: 1px solid var(--linea);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.panel-ventas .kpis .card {
+    padding: 0.9rem 1rem;
+    border: 0;
+    border-radius: 0;
+}
+
+.panel-ventas .kpi span {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--oscuro);
+}
+
+.panel-ventas .kpi b {
+    display: block;
+    margin: 0.15rem 0;
+    font-family: var(--fuente-titulo);
+    font-size: 1.6rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--oscuro);
+    font-variant-numeric: tabular-nums;
+}
+
+.panel-ventas .kpi small {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--apagado);
+}
+
+/* Variación: color + flecha, para no depender solo del color */
+.panel-ventas .kpi small.up {
+    color: var(--subida);
+}
+
+.panel-ventas .kpi small.down {
+    color: var(--bajada);
+}
+
+.panel-ventas .up::before {
+    content: "▲ ";
+    font-size: 0.7em;
+}
+
+.panel-ventas .down::before {
+    content: "▼ ";
+    font-size: 0.7em;
+}
+
+/* ---------- Cuadrícula de gráficos ---------- */
+
+.panel-ventas .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.panel-ventas .ancho {
+    grid-column: 1 / -1;
+}
+
+.panel-ventas .chart {
+    position: relative;
+    height: 280px;
+}
+
+.panel-ventas .ancho .chart {
+    height: 340px;
+}
+
+.panel-ventas .chart canvas {
+    max-width: 100%;
+}
+
+/* ---------- Tablas ---------- */
+
+.panel-ventas .tabla-scroll {
+    overflow-x: auto;
+}
+
+.panel-ventas table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--fuente-cuerpo);
+    font-variant-numeric: tabular-nums;
+}
+
+.panel-ventas th {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.82rem;
+    font-weight: 600;
+    text-align: left;
+    white-space: nowrap;
+    color: var(--oscuro);
+    border-bottom: 2px solid var(--borde);
+}
+
+.panel-ventas td {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.92rem;
+    border-bottom: 1px solid var(--linea);
+}
+
+.panel-ventas tr:last-child td {
+    border-bottom: 0;
+}
+
+.panel-ventas .centrado {
+    min-width: 5.5rem;
+    text-align: center;
+}
+
+.panel-ventas td.centrado {
+    font-weight: 600;
+}
+
+/* Matriz categoría x ocasión: la primera columna queda fija al desplazar */
+.panel-ventas .ancho.tabla-scroll th:first-child,
+.panel-ventas .ancho.tabla-scroll td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: #fff;
+    border-right: 1px solid var(--linea);
+}
+
+/* Matriz categoría x ocasión: 5 niveles de intensidad, derivados de la paleta */
+.panel-ventas .calor-0 { background: transparent; }
+.panel-ventas .calor-1 { background: color-mix(in srgb, var(--principal) 10%, #fff); }
+.panel-ventas .calor-2 { background: color-mix(in srgb, var(--principal) 24%, #fff); }
+.panel-ventas .calor-3 { background: color-mix(in srgb, var(--principal) 45%, #fff); }
+.panel-ventas .calor-4 { background: var(--principal); color: #fff; }
+.panel-ventas .calor-5 { background: #1e3a8a; color: #fff; }
+
+/* ---------- Teclado y movimiento ---------- */
+
+.panel-ventas a:focus-visible,
+.panel-ventas button:focus-visible,
+.panel-ventas input:focus-visible,
+.panel-ventas select:focus-visible {
+    outline: 2px solid var(--oscuro);
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .panel-ventas .chip {
+        transition: none;
+    }
+}
+
+/* ---------- Pantallas pequeñas ---------- */
+
+@media (max-width: 576px) {
+    .panel-ventas h1 {
+        font-size: 1.3rem;
+    }
+
+    .panel-ventas .kpi b {
+        font-size: 1.3rem;
+    }
+
+    .panel-ventas .chart {
+        height: 240px;
+    }
+
+    .panel-ventas .ancho .chart {
+        height: 280px;
+    }
+
+    .panel-ventas .fecha-info {
+        width: 100%;
+        margin-left: 0;
+    }
+
+    .panel-ventas .filtro-ocasion select {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+/* ---------- Impresión / PDF ---------- */
+
+@media print {
+    .panel-ventas .filtros,
+    .panel-ventas form.rango,
+    .panel-ventas .filtro-ocasion {
+        display: none;
+    }
+
+    .panel-ventas .card,
+    .panel-ventas .kpis {
+        break-inside: avoid;
+    }
+
+    .panel-ventas .grid {
+        display: block;
+    }
+
+    .panel-ventas .grid > .card {
+        margin-bottom: 1rem;
+    }
+}
+
+.btn-pdf {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    background-color: #000000;
+    color: #ffffff;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    transition: background-color 0.2s ease;
+}
+
