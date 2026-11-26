@@ -61,19 +61,6 @@
 
 <body class="bg-body" style="min-height: 100vh; display: flex; flex-direction: column;">
 
-    <nav class="navbar bg-body border-bottom px-3 d-md-none">
-        <button class="btn btn-outline-secondary btn-sm" type="button" data-bs-toggle="offcanvas"
-            data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
-            <i class="bi bi-list fs-5"></i> Menú
-        </button>
-        <span class="fw-bold text-body">Florería Admin</span>
-        <button class="btn btn-outline-secondary btn-sm theme-toggle" type="button"
-            aria-label="Activar modo oscuro" aria-pressed="false">
-            <i class="bi bi-moon-stars-fill"></i>
-            <span class="d-none d-sm-inline">Modo oscuro</span>
-        </button>
-    </nav>
-
     <!-- Contenedor principal en formato Flex (Sidebar + Contenido) -->
     <div class="d-flex" style="min-height: 100vh;">
 
@@ -91,9 +78,9 @@
             <!-- Cuerpo del Sidebar -->
             <div class="offcanvas-body d-flex flex-column p-3 h-100">
                 <a href="{% url 'admin_lista_productos' %}"
-                    class="d-none d-md-flex align-items-center mb-3 mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
-                    <i class="bi bi-shop fs-4 text-primary me-2"></i>
-                    <span class="fs-4 fw-bold">Florería Admin</span>
+                    class="d-none d-md-flex align-items-center mb- mb-md-0 me-md-auto link-body-emphasis text-decoration-none">
+                    <i class="bi bi-shield-lock-fill fs-4 text-primary me-2"></i>
+                    <span class="fs-4 fw-bold">Admin</span>
                 </a>
                 <hr class="d-none d-md-block" />
 
@@ -119,20 +106,18 @@
                     </li>
 
                     <li class="nav-item mb-1">
-                        <a href="#" class="nav-link link-body-emphasis">
-                            <i class="bi bi-tags me-2"></i> Categorías
+                        <a href="{% url 'vista_chat' %}" 
+                        class="nav-link {% if request.resolver_match.url_name == 'vista_chat' %}active{% else %}link-body-emphasis{% endif %}">
+                            <i class="bi bi-chat-dots me-2"></i> Chatbot Cotizaciones
                         </a>
                     </li>
                     <li class="nav-item mb-1">
-                        <a href="#" class="nav-link link-body-emphasis">
-                            <i class="bi bi-calendar-event me-2"></i> Ocasiones
+                        <a href="{% url 'metricas' %}" 
+                        class="nav-link {% if request.resolver_match.url_name == 'metricas' %}active{% else %}link-body-emphasis{% endif %}">
+                            <i class="bi bi-bar-chart-line me-2"></i> Datos ODEPA
                         </a>
                     </li>
 
-                    <li class="nav-item mb-1">
-                        <a href="#" class="nav-link link-body-emphasis">
-                            <i class="bi bi-people me-2"></i> Clientes
-                        </a>
                     </li>
                     <li class="nav-item mb-1">
                         <a href="{% url 'inicio' %}" class="nav-link link-body-emphasis">
@@ -150,16 +135,15 @@
                 <hr />
                 <!-- Perfil de usuario en la parte inferior del sidebar -->
                 <div class="dropdown">
-                    <a href="#"
+                    <a href="{% url 'logout' %}"
                         class="d-flex align-items-center link-body-emphasis text-decoration-none dropdown-toggle"
                         data-bs-toggle="dropdown" aria-expanded="false">
-                        <img src="https://github.com/mdo.png" alt="" width="32" height="32"
-                            class="rounded-circle me-2" />
-                        <strong>Admin</strong>
+                        
+                        <strong>{{ request.user.username }}</strong>
                     </a>
                     <ul class="dropdown-menu text-small shadow">
-                        <li><a class="dropdown-item" href="#">Configuración</a></li>
-                        <li><a class="dropdown-item" href="#">Perfil</a></li>
+                        
+                        <li><a class="dropdown-item" href="{% url 'editar_perfil' %}">Perfil</a></li>
                         <li>
                             <hr class="dropdown-divider" />
                         </li>
