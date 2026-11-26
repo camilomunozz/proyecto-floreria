@@ -1,0 +1,36 @@
+@startuml
+title FLOWERVIEW - Diagrama de Componentes
+
+actor Cliente
+actor Administrador
+
+package "FlowerView - Django" {
+    component "Tienda" as Tienda
+    component "Pedidos" as Pedidos
+    component "Chatbot Usuario" as Chatbot
+    component "Autenticación" as Auth
+    component "Panel de Administración" as Admin
+}
+
+database "PostgreSQL" as DB
+cloud "Transbank / WebPay" as WebPay
+cloud "Groq API" as Groq
+
+Cliente --> Tienda
+Cliente --> Auth
+Cliente --> Pedidos
+Cliente --> Chatbot
+
+Administrador --> Admin
+Admin --> Tienda
+Admin --> Pedidos
+
+Tienda --> DB
+Auth --> DB
+Pedidos --> DB
+Chatbot --> DB : Consulta productos
+
+Pedidos --> WebPay : Procesa pagos
+Chatbot --> Groq : Consulta IA
+
+@enduml

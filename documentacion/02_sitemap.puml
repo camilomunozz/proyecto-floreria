@@ -1,0 +1,26 @@
+@startwbs
+* FLOWERVIEW
+** Inicio
+** Catálogo
+*** Búsqueda
+*** Filtros
+*** Productos
+** Cliente
+*** Registro
+*** Iniciar sesión
+*** Editar perfil
+*** Carrito
+*** Checkout
+*** Pagos WebPay
+*** Mis pedidos
+*** Chatbot
+** Administración
+*** Gestión de productos
+*** Gestión de categorías
+*** Gestión de tipos
+*** Gestión de ocasiones
+*** Gestión de pedidos
+*** Panel BI
+****  Reportes PDF
+
+@endwbs
