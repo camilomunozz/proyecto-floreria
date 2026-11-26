@@ -117,7 +117,6 @@ CLOUDINARY_STORAGE = {
     "API_SECRET": os.environ["CLOUDINARY_API_SECRET"],
     
 }
-GEMINI_API_KEY= os.environ["GEMINI_API_KEY"]
 
 STORAGES = {
     "default": {"BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage"},
