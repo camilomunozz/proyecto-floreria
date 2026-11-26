@@ -29,7 +29,7 @@ SECRET_KEY = 'django-insecure-vp#kp*4h&i6m03h&=mc2mnwnc5c4zwd@)=#ny3tg6yq$0n%i9g
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS = ['https://burns-awards-morrison-vacancies.trycloudflare.com']
+CSRF_TRUSTED_ORIGINS = ['https://terrorism-holes-volume-accurate.trycloudflare.com']
 
 
 # Application definition
@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'tienda',
     'carrito',
     'pedidos',
+    'chatbot',
     'django_browser_reload',
 ]
 
@@ -128,7 +129,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -163,3 +164,7 @@ DEFAULT_FROM_EMAIL = 'Florería <noreply@floreria.cl>'
 TRANSBANK_AMBIENTE = 'TEST'  # Cambiar a 'LIVE' en producción
 TRANSBANK_COMMERCE_CODE = "597055555532"
 TRANSBANK_API_KEY = "579B532A7440BB0C9072DED5305E76fc2F62D8082F70757e490d181a1b8d810d"
+
+#chatbot
+SESSION_ENGINE = 'django.contrib.sessions.backends.signed_cookies'
+GEMINI_API_KEY = "AQ.Ab8RN6KS3PVSO7vkwdhgRZHtK91zPBtV3hg6pGV9X1VnQrNmRQ"

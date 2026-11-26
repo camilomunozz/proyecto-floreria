@@ -85,20 +85,16 @@
                         </li>
 
                         <li>
-                            <a class="dropdown-item" href="#">
+                            <a class="dropdown-item" href="{% url 'editar_perfil' %}">
                                 <i class="bi bi-person me-2"></i>Mi perfil
                             </a>
                         </li>
                         <li>
-                            <a class="dropdown-item" href="#">
+                            <a class="dropdown-item" href="{% url 'mis_pedidos' %}">
                                 <i class="bi bi-box-seam me-2"></i>Mis pedidos
                             </a>
                         </li>
-                        <li>
-                            <a class="dropdown-item " href="{% url 'editar_perfil' %}">
-                                <i class="bi bi-gear me-2"></i>Editar perfil
-                            </a>
-                        </li>
+
 
                         <!-- para el administrador -->
                         {% if request.user.role == 'admin' %}
