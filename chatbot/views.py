@@ -1,5 +1,6 @@
 from django.shortcuts import render
 #chatbot
+import os
 import json
 from django.conf import settings
 from django.http import JsonResponse, HttpResponse
@@ -12,7 +13,7 @@ from django.template.loader import render_to_string
 from datetime import datetime
 from tienda.decorators import role_required
 
-client = genai.Client(api_key=settings.GEMINI_API_KEY)
+client = genai.Client(api_key=os.environ.GEMINI_API_KEY)
 
 SYSTEM_PROMPT = """
 Eres un asistente de compras y cotizaciones para el dueño de una florería en Chile.
